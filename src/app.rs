@@ -29,7 +29,7 @@ pub struct RootApp {
 impl Default for RootApp {
     fn default() -> Self {
         Self {
-            widgets: vec![(Box::new(ScriptHash::default()), true, 0)],
+            widgets: vec![(Box::<ScriptHash>::default(), true, 0)],
             counter: 1,
         }
     }
@@ -53,12 +53,12 @@ impl eframe::App for RootApp {
             egui::containers::ScrollArea::vertical().show(ui, |ui| {
                 if ui.button("Script Hash").clicked() {
                     self.widgets
-                        .push((Box::new(ScriptHash::default()), true, self.counter));
+                        .push((Box::<ScriptHash>::default(), true, self.counter));
                     self.counter += 1;
                 }
                 if ui.button("CKB Hash").clicked() {
                     self.widgets
-                        .push((Box::new(CkbHash::default()), true, self.counter));
+                        .push((Box::<CkbHash>::default(), true, self.counter));
                     self.counter += 1;
                 }
             });

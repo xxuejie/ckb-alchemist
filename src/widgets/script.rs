@@ -2,7 +2,59 @@ use super::{
     utils::{decode_hex, restore_from_slot_widget, save_to_slot_widget},
     GlobalContext, Output, Widget,
 };
-use ckb_standalone_types::{core::ScriptHashType, packed::Script, prelude::*};
+use ckb_standalone_types::{
+    packed::{Byte, Script},
+    prelude::*,
+};
+use core::str::FromStr;
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum ScriptHashTypeInner {
+    Data,
+    Type,
+    Data1,
+    DataN,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ScriptHashType {
+    pub inner: ScriptHashTypeInner,
+    pub n: String,
+}
+
+impl Default for ScriptHashType {
+    fn default() -> Self {
+        ScriptHashType {
+            inner: ScriptHashTypeInner::Data,
+            n: String::default(),
+        }
+    }
+}
+
+impl TryFrom<ScriptHashType> for Byte {
+    type Error = String;
+
+    fn try_from(value: ScriptHashType) -> Result<Self, Self::Error> {
+        Ok(Byte::new(match value.inner {
+            ScriptHashTypeInner::Data => 0,
+            ScriptHashTypeInner::Type => 1,
+            ScriptHashTypeInner::Data1 => 2,
+            ScriptHashTypeInner::DataN => match u8::from_str(&value.n) {
+                Ok(n) => {
+                    if n <= 127 {
+                        n << 1
+                    } else {
+                        return Err(format!(
+                            "It is not possible to build data version {}!",
+                            value.n
+                        ));
+                    }
+                }
+                Err(e) => return Err(format!("Error parsing n: {}", e)),
+            },
+        }))
+    }
+}
 
 pub struct ScriptAssembler {
     pub code_hash: String,
@@ -28,11 +80,12 @@ impl ScriptAssembler {
                 Err(e) => Err(format!("Error parsing code hash: {}", e)),
             }
         };
+        let parsed_hash_type = self.hash_type.clone().try_into()?;
         let parsed_args = decode_hex(&self.args);
         match (parsed_code_hash, parsed_args) {
             (Ok(code_hash), Ok(args)) => Ok(Script::new_builder()
                 .code_hash(code_hash)
-                .hash_type(self.hash_type.into())
+                .hash_type(parsed_hash_type)
                 .args(args.pack())
                 .build()),
             (Err(e), _) => Err(e),
@@ -59,7 +112,7 @@ impl Default for ScriptAssembler {
         let mut h = Self {
             code_hash: "0x0000000000000000000000000000000000000000000000000000000000000000"
                 .to_string(),
-            hash_type: ScriptHashType::Data,
+            hash_type: ScriptHashType::default(),
             args: String::default(),
             script: Output::default(),
             code_hash_slot: None,
@@ -112,20 +165,48 @@ impl Widget for ScriptAssembler {
                 ui.label("Hash Type:");
                 ui.horizontal(|ui| {
                     if ui
-                        .selectable_value(&mut self.hash_type, ScriptHashType::Data, "Data")
+                        .selectable_value(
+                            &mut self.hash_type.inner,
+                            ScriptHashTypeInner::Data,
+                            "Data",
+                        )
                         .clicked()
                     {
                         changed = true;
                     }
                     if ui
-                        .selectable_value(&mut self.hash_type, ScriptHashType::Data1, "Data1")
+                        .selectable_value(
+                            &mut self.hash_type.inner,
+                            ScriptHashTypeInner::Data1,
+                            "Data1",
+                        )
                         .clicked()
                     {
                         changed = true;
                     }
                     if ui
-                        .selectable_value(&mut self.hash_type, ScriptHashType::Type, "Type")
+                        .selectable_value(
+                            &mut self.hash_type.inner,
+                            ScriptHashTypeInner::Type,
+                            "Type",
+                        )
                         .clicked()
+                    {
+                        changed = true;
+                    }
+                    if ui
+                        .selectable_value(
+                            &mut self.hash_type.inner,
+                            ScriptHashTypeInner::DataN,
+                            "DataN",
+                        )
+                        .clicked()
+                    {
+                        changed = true;
+                    }
+
+                    if self.hash_type.inner == ScriptHashTypeInner::DataN
+                        && ui.text_edit_singleline(&mut self.hash_type.n).changed()
                     {
                         changed = true;
                     }

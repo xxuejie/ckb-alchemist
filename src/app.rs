@@ -10,20 +10,27 @@ fn blake2b_256<T: AsRef<[u8]>>(s: T) -> [u8; 32] {
     result
 }
 
+pub trait Widget {
+    fn name(&self) -> String;
+    fn ui(&mut self, ui: &mut egui::Ui);
+
+    fn draw(&mut self, ctx: &egui::Context, open: &mut bool, id: u64) {
+        egui::Window::new(format!("{} #{}", self.name(), id))
+            .open(open)
+            .show(ctx, |ui| self.ui(ui));
+    }
+}
+
 pub struct RootApp {
-    pub script_hash_window: ScriptHash,
-    pub script_hash_open: bool,
-    pub ckb_hash_window: CkbHash,
-    pub ckb_hash_open: bool,
+    pub widgets: Vec<(Box<dyn Widget>, bool, u64)>,
+    pub counter: u64,
 }
 
 impl Default for RootApp {
     fn default() -> Self {
         Self {
-            script_hash_window: ScriptHash::default(),
-            script_hash_open: true,
-            ckb_hash_window: CkbHash::default(),
-            ckb_hash_open: true,
+            widgets: vec![(Box::new(ScriptHash::default()), true, 0)],
+            counter: 1,
         }
     }
 }
@@ -44,8 +51,16 @@ impl eframe::App for RootApp {
             ui.separator();
 
             egui::containers::ScrollArea::vertical().show(ui, |ui| {
-                ui.toggle_value(&mut self.script_hash_open, self.script_hash_window.name());
-                ui.toggle_value(&mut self.ckb_hash_open, self.ckb_hash_window.name());
+                if ui.button("Script Hash").clicked() {
+                    self.widgets
+                        .push((Box::new(ScriptHash::default()), true, self.counter));
+                    self.counter += 1;
+                }
+                if ui.button("CKB Hash").clicked() {
+                    self.widgets
+                        .push((Box::new(CkbHash::default()), true, self.counter));
+                    self.counter += 1;
+                }
             });
 
             ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
@@ -72,9 +87,12 @@ impl eframe::App for RootApp {
             egui::warn_if_debug_build(ui);
         });
 
-        self.script_hash_window
-            .draw(ctx, &mut self.script_hash_open);
-        self.ckb_hash_window.draw(ctx, &mut self.script_hash_open);
+        // Remove all closed widgets
+        self.widgets.retain_mut(|(_, opened, _)| *opened);
+        // Draw opened widgets
+        for (widget, opened, id) in self.widgets.iter_mut() {
+            widget.draw(ctx, opened, *id);
+        }
     }
 }
 
@@ -95,15 +113,9 @@ impl Default for ScriptHash {
     }
 }
 
-impl ScriptHash {
-    pub fn name(&self) -> String {
+impl Widget for ScriptHash {
+    fn name(&self) -> String {
         "Script Hash Calculator".to_string()
-    }
-
-    pub fn draw(&mut self, ctx: &egui::Context, open: &mut bool) {
-        egui::Window::new(self.name())
-            .open(open)
-            .show(ctx, |ui| self.ui(ui));
     }
 
     fn ui(&mut self, ui: &mut egui::Ui) {
@@ -202,15 +214,9 @@ pub struct CkbHash {
     pub content: String,
 }
 
-impl CkbHash {
-    pub fn name(&self) -> String {
+impl Widget for CkbHash {
+    fn name(&self) -> String {
         "CKB Hasher".to_string()
-    }
-
-    pub fn draw(&mut self, ctx: &egui::Context, open: &mut bool) {
-        egui::Window::new(self.name())
-            .open(open)
-            .show(ctx, |ui| self.ui(ui));
     }
 
     fn ui(&mut self, ui: &mut egui::Ui) {
@@ -230,7 +236,7 @@ impl CkbHash {
 
         match raw_data {
             Ok(data) => {
-                let script_hash = format!("0x{:x}", Bytes::from(blake2b_256(&data).to_vec()));
+                let script_hash = format!("0x{:x}", Bytes::from(blake2b_256(data).to_vec()));
 
                 ui.horizontal(|ui| {
                     ui.label("Script Hash: ");

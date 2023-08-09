@@ -1,25 +1,4 @@
-use ckb_standalone_types::{bytes::Bytes, core::ScriptHashType, packed::Script, prelude::*};
-
-fn blake2b_256<T: AsRef<[u8]>>(s: T) -> [u8; 32] {
-    let mut result = [0u8; 32];
-    let mut hasher = blake2b_ref::Blake2bBuilder::new(32)
-        .personal(b"ckb-default-hash")
-        .build();
-    hasher.update(s.as_ref());
-    hasher.finalize(&mut result);
-    result
-}
-
-pub trait Widget {
-    fn name(&self) -> String;
-    fn ui(&mut self, ui: &mut egui::Ui);
-
-    fn draw(&mut self, ctx: &egui::Context, open: &mut bool, id: u64) {
-        egui::Window::new(format!("{} #{}", self.name(), id))
-            .open(open)
-            .show(ctx, |ui| self.ui(ui));
-    }
-}
+use crate::widgets::{CkbHash, ScriptAssembler, Widget};
 
 pub struct RootApp {
     pub widgets: Vec<(Box<dyn Widget>, bool, u64)>,
@@ -29,7 +8,7 @@ pub struct RootApp {
 impl Default for RootApp {
     fn default() -> Self {
         Self {
-            widgets: vec![(Box::<ScriptHash>::default(), true, 0)],
+            widgets: vec![(Box::<ScriptAssembler>::default(), true, 0)],
             counter: 1,
         }
     }
@@ -39,6 +18,17 @@ impl RootApp {
     /// Called once before the first frame.
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
         Default::default()
+    }
+
+    fn next_id(&mut self) -> u64 {
+        let result = self.counter;
+        self.counter += 1;
+        result
+    }
+
+    fn add_widget(&mut self, widget: Box<dyn Widget>) {
+        let id = self.next_id();
+        self.widgets.push((widget, true, id));
     }
 }
 
@@ -51,15 +41,11 @@ impl eframe::App for RootApp {
             ui.separator();
 
             egui::containers::ScrollArea::vertical().show(ui, |ui| {
-                if ui.button("Script Hash").clicked() {
-                    self.widgets
-                        .push((Box::<ScriptHash>::default(), true, self.counter));
-                    self.counter += 1;
+                if ui.button("Script Assembler").clicked() {
+                    self.add_widget(Box::<ScriptAssembler>::default());
                 }
                 if ui.button("CKB Hash").clicked() {
-                    self.widgets
-                        .push((Box::<CkbHash>::default(), true, self.counter));
-                    self.counter += 1;
+                    self.add_widget(Box::<CkbHash>::default());
                 }
             });
 
@@ -92,163 +78,6 @@ impl eframe::App for RootApp {
         // Draw opened widgets
         for (widget, opened, id) in self.widgets.iter_mut() {
             widget.draw(ctx, opened, *id);
-        }
-    }
-}
-
-pub struct ScriptHash {
-    pub code_hash: String,
-    pub hash_type: ScriptHashType,
-    pub args: String,
-}
-
-impl Default for ScriptHash {
-    fn default() -> Self {
-        Self {
-            code_hash: "0x0000000000000000000000000000000000000000000000000000000000000000"
-                .to_string(),
-            hash_type: ScriptHashType::Data,
-            args: String::default(),
-        }
-    }
-}
-
-impl Widget for ScriptHash {
-    fn name(&self) -> String {
-        "Script Hash Calculator".to_string()
-    }
-
-    fn ui(&mut self, ui: &mut egui::Ui) {
-        let parsed_code_hash = {
-            let mut data = [0u8; 32];
-            let mut value = self.code_hash.as_str();
-            if value.starts_with("0x") {
-                value = &value[2..];
-            }
-            match hex::decode_to_slice(value, &mut data) {
-                Ok(_) => Ok(data.pack()),
-                Err(e) => Err(format!("Error parsing code hash: {}", e)),
-            }
-        };
-        let parsed_args = {
-            let mut value = self.args.as_str();
-            if value.starts_with("0x") {
-                value = &value[2..];
-            }
-            match hex::decode(value) {
-                Ok(data) => Ok(data.pack()),
-                Err(e) => Err(format!("Error parsing args: {}", e)),
-            }
-        };
-        let result = match (parsed_code_hash, parsed_args) {
-            (Ok(code_hash), Ok(args)) => Ok(Script::new_builder()
-                .code_hash(code_hash)
-                .hash_type(self.hash_type.into())
-                .args(args)
-                .build()),
-            (Err(e), _) => Err(e),
-            (_, Err(e)) => Err(e),
-        };
-
-        egui::Grid::new("script")
-            .num_columns(2)
-            .striped(true)
-            .max_col_width(400.0)
-            .show(ui, |ui| {
-                ui.label("Code Hash: ");
-                ui.text_edit_singleline(&mut self.code_hash);
-                ui.end_row();
-
-                ui.label("Hash Type:");
-                ui.horizontal(|ui| {
-                    ui.selectable_value(&mut self.hash_type, ScriptHashType::Data, "Data");
-                    ui.selectable_value(&mut self.hash_type, ScriptHashType::Data1, "Data1");
-                    ui.selectable_value(&mut self.hash_type, ScriptHashType::Type, "Type");
-                });
-                ui.end_row();
-
-                ui.label("Args: ");
-                ui.text_edit_singleline(&mut self.args);
-                ui.end_row();
-
-                ui.end_row();
-
-                if let Ok(script) = &result {
-                    let script_bytes = format!("0x{:x}", script.as_bytes());
-                    ui.horizontal(|ui| {
-                        ui.label("Serialized script: ");
-                        if ui.button("📋").on_hover_text("Click to copy").clicked() {
-                            ui.output_mut(|o| o.copied_text = script_bytes.clone());
-                        }
-                    });
-                    ui.add(egui::Label::new(script_bytes).wrap(true));
-                    ui.end_row();
-
-                    ui.label("Script length:");
-                    ui.label(format!("{}", script.as_slice().len()));
-                    ui.end_row();
-
-                    let script_hash = format!(
-                        "0x{:x}",
-                        Bytes::from(blake2b_256(script.as_slice()).to_vec())
-                    );
-                    ui.horizontal(|ui| {
-                        ui.label("Script Hash: ");
-                        if ui.button("📋").on_hover_text("Click to copy").clicked() {
-                            ui.output_mut(|o| o.copied_text = script_hash.clone());
-                        }
-                    });
-                    ui.add(egui::Label::new(script_hash).wrap(true));
-                    ui.end_row();
-                }
-            });
-
-        if let Err(e) = result {
-            ui.label(egui::RichText::new(e).color(egui::Color32::RED));
-        }
-    }
-}
-
-#[derive(Default)]
-pub struct CkbHash {
-    pub content: String,
-}
-
-impl Widget for CkbHash {
-    fn name(&self) -> String {
-        "CKB Hasher".to_string()
-    }
-
-    fn ui(&mut self, ui: &mut egui::Ui) {
-        ui.label("Content in HEX:");
-        ui.text_edit_multiline(&mut self.content);
-
-        let raw_data = {
-            let mut value = self.content.as_str();
-            if value.starts_with("0x") {
-                value = &value[2..];
-            }
-            match hex::decode(value) {
-                Ok(data) => Ok(data),
-                Err(e) => Err(format!("Error parsing hex content: {}", e)),
-            }
-        };
-
-        match raw_data {
-            Ok(data) => {
-                let script_hash = format!("0x{:x}", Bytes::from(blake2b_256(data).to_vec()));
-
-                ui.horizontal(|ui| {
-                    ui.label("Script Hash: ");
-                    if ui.button("📋").on_hover_text("Click to copy").clicked() {
-                        ui.output_mut(|o| o.copied_text = script_hash.clone());
-                    }
-                });
-                ui.add(egui::Label::new(script_hash).wrap(true));
-            }
-            Err(e) => {
-                ui.label(egui::RichText::new(e).color(egui::Color32::RED));
-            }
         }
     }
 }

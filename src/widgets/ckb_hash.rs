@@ -1,5 +1,5 @@
 use super::{
-    utils::{blake2b_256, restore_from_slot_widget, save_to_slot_widget},
+    utils::{blake2b_256, decode_hex, restore_from_slot_widget, save_to_slot_widget},
     GlobalContext, Widget,
 };
 use ckb_standalone_types::bytes::Bytes;
@@ -29,16 +29,7 @@ impl Widget for CkbHash {
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, global_context: &mut GlobalContext) {
-        let raw_data = {
-            let mut value = self.content.as_str();
-            if value.starts_with("0x") {
-                value = &value[2..];
-            }
-            match hex::decode(value) {
-                Ok(data) => Ok(data),
-                Err(e) => Err(format!("Error parsing hex content: {}", e)),
-            }
-        };
+        let raw_data = decode_hex(&self.content);
 
         egui::Grid::new("script")
             .num_columns(2)
@@ -56,21 +47,22 @@ impl Widget for CkbHash {
                 ui.end_row();
             });
 
-        if let Ok(data) = &raw_data {
-            let script_hash = format!("0x{:x}", Bytes::from(blake2b_256(data).to_vec()));
+        match raw_data {
+            Ok(data) => {
+                let script_hash = format!("0x{:x}", Bytes::from(blake2b_256(data).to_vec()));
 
-            ui.horizontal(|ui| {
-                ui.label("Script Hash: ");
-                if ui.button("📋").on_hover_text("Click to copy").clicked() {
-                    ui.output_mut(|o| o.copied_text = script_hash.clone());
-                }
-                save_to_slot_widget(ui, &script_hash, &mut self.hash_slot, global_context);
-            });
-            ui.add(egui::Label::new(script_hash).wrap(true));
-        }
-
-        if let Err(e) = raw_data {
-            ui.label(egui::RichText::new(e).color(egui::Color32::RED));
+                ui.horizontal(|ui| {
+                    ui.label("Script Hash: ");
+                    if ui.button("📋").on_hover_text("Click to copy").clicked() {
+                        ui.output_mut(|o| o.copied_text = script_hash.clone());
+                    }
+                    save_to_slot_widget(ui, &script_hash, &mut self.hash_slot, global_context);
+                });
+                ui.add(egui::Label::new(script_hash).wrap(true));
+            }
+            Err(e) => {
+                ui.label(egui::RichText::new(e).color(egui::Color32::RED));
+            }
         }
     }
 }

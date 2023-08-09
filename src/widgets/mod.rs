@@ -1,8 +1,10 @@
 mod ckb_hash;
+mod concat;
 mod script;
 mod utils;
 
 pub use ckb_hash::CkbHash;
+pub use concat::Concat;
 pub use script::ScriptAssembler;
 
 use std::collections::HashMap;

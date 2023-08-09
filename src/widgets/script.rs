@@ -1,5 +1,5 @@
 use super::{
-    utils::{restore_from_slot_widget, save_to_slot_widget},
+    utils::{decode_hex, restore_from_slot_widget, save_to_slot_widget},
     GlobalContext, Widget,
 };
 use ckb_standalone_types::{core::ScriptHashType, packed::Script, prelude::*};
@@ -27,21 +27,12 @@ impl ScriptAssembler {
                 Err(e) => Err(format!("Error parsing code hash: {}", e)),
             }
         };
-        let parsed_args = {
-            let mut value = self.args.as_str();
-            if value.starts_with("0x") {
-                value = &value[2..];
-            }
-            match hex::decode(value) {
-                Ok(data) => Ok(data.pack()),
-                Err(e) => Err(format!("Error parsing args: {}", e)),
-            }
-        };
+        let parsed_args = decode_hex(&self.args);
         match (parsed_code_hash, parsed_args) {
             (Ok(code_hash), Ok(args)) => Ok(Script::new_builder()
                 .code_hash(code_hash)
                 .hash_type(self.hash_type.into())
-                .args(args)
+                .args(args.pack())
                 .build()),
             (Err(e), _) => Err(e),
             (_, Err(e)) => Err(e),

@@ -1,4 +1,4 @@
-use crate::widgets::{CkbHash, GlobalContext, ScriptAssembler, Widget, WidgetContext};
+use crate::widgets::{CkbHash, Concat, GlobalContext, ScriptAssembler, Widget, WidgetContext};
 
 pub struct RootApp {
     pub widgets: Vec<(Box<dyn Widget>, WidgetContext)>,
@@ -58,6 +58,9 @@ impl eframe::App for RootApp {
                 }
                 if ui.button("CKB Hash").clicked() {
                     self.add_widget(Box::<CkbHash>::default());
+                }
+                if ui.button("Concat").clicked() {
+                    self.add_widget(Box::<Concat>::default());
                 }
             });
 

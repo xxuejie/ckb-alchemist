@@ -1,4 +1,5 @@
 use super::GlobalContext;
+use ckb_standalone_types::bytes::Bytes;
 
 pub fn blake2b_256<T: AsRef<[u8]>>(s: T) -> [u8; 32] {
     let mut result = [0u8; 32];
@@ -8,6 +9,15 @@ pub fn blake2b_256<T: AsRef<[u8]>>(s: T) -> [u8; 32] {
     hasher.update(s.as_ref());
     hasher.finalize(&mut result);
     result
+}
+
+pub fn decode_hex(mut s: &str) -> Result<Bytes, String> {
+    if s.starts_with("0x") {
+        s = &s[2..];
+    }
+    hex::decode(s)
+        .map(|data| Bytes::from(data))
+        .map_err(|e| format!("Error parsing hex content: {}", e))
 }
 
 pub fn save_to_slot_widget(

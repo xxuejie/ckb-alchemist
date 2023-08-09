@@ -1,16 +1,28 @@
-use crate::widgets::{CkbHash, ScriptAssembler, Widget};
+use crate::widgets::{CkbHash, GlobalContext, ScriptAssembler, Widget, WidgetContext};
 
 pub struct RootApp {
-    pub widgets: Vec<(Box<dyn Widget>, bool, u64)>,
+    pub widgets: Vec<(Box<dyn Widget>, WidgetContext)>,
     pub counter: u64,
+    pub context: GlobalContext,
 }
 
 impl Default for RootApp {
     fn default() -> Self {
-        Self {
-            widgets: vec![(Box::<ScriptAssembler>::default(), true, 0)],
-            counter: 1,
-        }
+        let mut app = Self {
+            widgets: vec![],
+            counter: 0,
+            context: GlobalContext::default(),
+        };
+        // Create an initial layout for illustration of usage.
+        let mut script_assembler = Box::<ScriptAssembler>::default();
+        let mut ckb_hash = Box::<CkbHash>::default();
+        let slot_id = script_assembler
+            .create_script_output_slot(&mut app.context)
+            .expect("create slot");
+        ckb_hash.set_content_slot(slot_id);
+        app.add_widget(script_assembler);
+        app.add_widget(ckb_hash);
+        app
     }
 }
 
@@ -28,7 +40,7 @@ impl RootApp {
 
     fn add_widget(&mut self, widget: Box<dyn Widget>) {
         let id = self.next_id();
-        self.widgets.push((widget, true, id));
+        self.widgets.push((widget, WidgetContext::new(id)));
     }
 }
 
@@ -70,14 +82,20 @@ impl eframe::App for RootApp {
             ui.heading("CKB Alchemist");
             ui.hyperlink("https://github.com/xxuejie/ckb-alchemist");
             ui.label("A toolbox for Nervos CKB utility functions");
+            ui.label("The default example here illustrates the concept of slots. One can save the output from one window (e.g., serialized script bytes, ckb hashes) into global slots, then use slots as inputs to other windows. One we we might implement visualizations such as node graphs for this purpose, but for now, slots provides an easy solution with non-intrusive code.");
             egui::warn_if_debug_build(ui);
         });
 
         // Remove all closed widgets
-        self.widgets.retain_mut(|(_, opened, _)| *opened);
+        self.widgets.retain_mut(|(w, c)| {
+            if !c.open {
+                w.remove(&mut self.context);
+            }
+            c.open
+        });
         // Draw opened widgets
-        for (widget, opened, id) in self.widgets.iter_mut() {
-            widget.draw(ctx, opened, *id);
+        for (widget, c) in self.widgets.iter_mut() {
+            widget.draw(ctx, c, &mut self.context);
         }
     }
 }

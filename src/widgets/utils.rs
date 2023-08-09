@@ -29,7 +29,9 @@ pub fn save_to_slot_widget(
     match slot {
         Some(slot) => {
             global_context.update_slot(*slot, value.to_string());
-            ui.label(format!("Saved to slot {}", slot));
+            ui.label(
+                egui::RichText::new(format!("Saved to slot {}", slot)).color(egui::Color32::YELLOW),
+            );
         }
         None => {
             if ui

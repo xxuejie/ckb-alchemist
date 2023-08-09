@@ -133,7 +133,7 @@ impl Widget for ScriptAssembler {
                         }
                         save_to_slot_widget(
                             ui,
-                            &script_bytes,
+                            script_bytes,
                             &mut self.script_slot,
                             global_context,
                         );

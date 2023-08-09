@@ -1,11 +1,13 @@
 mod ckb_hash;
 mod concat;
 mod script;
+mod slice;
 mod utils;
 
 pub use ckb_hash::CkbHash;
 pub use concat::Concat;
 pub use script::ScriptAssembler;
+pub use slice::Slice;
 
 use std::collections::HashMap;
 

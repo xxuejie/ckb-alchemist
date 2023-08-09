@@ -2,20 +2,21 @@ use super::{
     utils::{decode_hex, restore_from_slot_widget, save_to_slot_widget},
     GlobalContext, Widget,
 };
+use core::str::FromStr;
 
 #[derive(Default)]
-pub struct Concat {
-    pub input1: String,
-    pub input2: String,
+pub struct Slice {
+    pub input: String,
+    pub start: String,
+    pub end: String,
 
-    pub input1_slot: Option<u64>,
-    pub input2_slot: Option<u64>,
+    pub input_slot: Option<u64>,
     pub output_slot: Option<u64>,
 }
 
-impl Widget for Concat {
+impl Widget for Slice {
     fn name(&self) -> String {
-        "Concatenator".to_string()
+        "Slicer".to_string()
     }
 
     fn remove(&mut self, global_context: &mut GlobalContext) {
@@ -25,42 +26,51 @@ impl Widget for Concat {
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, global_context: &mut GlobalContext) {
-        let raw1 = decode_hex(&self.input1);
-        let raw2 = decode_hex(&self.input2);
+        let data = decode_hex(&self.input);
+        let start =
+            usize::from_str(&self.start).map_err(|e| format!("Error parsing number: {}", e));
+        let end = usize::from_str(&self.end).map_err(|e| format!("Error parsing number: {}", e));
 
-        let result = match (raw1, raw2) {
-            (Ok(raw1), Ok(raw2)) => Ok(format!("0x{:x}{:x}", raw1, raw2)),
-            (Err(e), _) => Err(e),
-            (_, Err(e)) => Err(e),
+        let data = match (data, start, end) {
+            (Ok(data), Ok(start), Ok(end)) => {
+                if start > end {
+                    Err("Start must be smaller or equal to end!".to_string())
+                } else if end > data.len() {
+                    Err("End exceeds data range!".to_string())
+                } else {
+                    Ok(format!("0x{:x}", data.slice(start..end)))
+                }
+            }
+            (Err(e), _, _) => Err(e),
+            (_, Err(e), _) => Err(e),
+            (_, _, Err(e)) => Err(e),
         };
 
-        egui::Grid::new("concat")
+        egui::Grid::new("slice")
             .num_columns(2)
             .striped(true)
             .max_col_width(400.0)
             .show(ui, |ui| {
-                ui.label("Input 1 in HEX:");
+                ui.label("Input in HEX:");
                 restore_from_slot_widget(
                     ui,
                     true,
-                    &mut self.input1,
-                    &mut self.input1_slot,
+                    &mut self.input,
+                    &mut self.input_slot,
                     global_context,
                 );
                 ui.end_row();
 
-                ui.label("Input 2 in HEX:");
-                restore_from_slot_widget(
-                    ui,
-                    true,
-                    &mut self.input2,
-                    &mut self.input2_slot,
-                    global_context,
-                );
+                ui.label("Slicing start:");
+                ui.text_edit_singleline(&mut self.start);
+                ui.end_row();
+
+                ui.label("Slicing end:");
+                ui.text_edit_singleline(&mut self.end);
                 ui.end_row();
             });
 
-        match result {
+        match data {
             Ok(output) => {
                 ui.horizontal(|ui| {
                     ui.label("Result: ");

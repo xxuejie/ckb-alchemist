@@ -16,7 +16,7 @@ pub fn decode_hex(mut s: &str) -> Result<Bytes, String> {
         s = &s[2..];
     }
     hex::decode(s)
-        .map(|data| Bytes::from(data))
+        .map(Bytes::from)
         .map_err(|e| format!("Error parsing hex content: {}", e))
 }
 

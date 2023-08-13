@@ -20,30 +20,22 @@ pub fn decode_hex(mut s: &str) -> Result<Bytes, String> {
         .map_err(|e| format!("Error parsing hex content: {}", e))
 }
 
-pub fn save_to_slot_widget(
-    ui: &mut egui::Ui,
-    value: &str,
-    slot: &mut Option<u64>,
-    global_context: &mut GlobalContext,
-) {
+pub fn save_to_slot_widget(ui: &mut egui::Ui, slot: &Option<u64>) -> bool {
+    let mut clicked = false;
     match slot {
         Some(slot) => {
-            global_context.update_slot(*slot, value.to_string());
             ui.label(
                 egui::RichText::new(format!("Saved to slot {}", slot)).color(egui::Color32::YELLOW),
             );
         }
         None => {
-            if ui
+            clicked = ui
                 .button("💾")
                 .on_hover_text("Click to save to new slot")
-                .clicked()
-            {
-                let id = global_context.new_slot(value.to_string());
-                *slot = Some(id);
-            }
+                .clicked();
         }
-    }
+    };
+    clicked
 }
 
 pub fn restore_from_slot_widget(
@@ -52,7 +44,7 @@ pub fn restore_from_slot_widget(
     manual_edit_value: &mut String,
     slot: &mut Option<u64>,
     global_context: &mut GlobalContext,
-) {
+) -> bool {
     let slot_content = match slot {
         Some(slot_id) => match global_context.fetch_slot(*slot_id) {
             Some(value) => Some((*slot_id, value)),
@@ -65,8 +57,13 @@ pub fn restore_from_slot_widget(
         },
         None => None,
     };
+    let mut changed = false;
     match slot_content {
-        Some((mut slot_id, value)) => {
+        Some((slot_id, value)) => {
+            if manual_edit_value != &value {
+                *manual_edit_value = value.clone();
+                changed = true;
+            }
             ui.horizontal(|ui| {
                 if ui
                     .button("💰")
@@ -75,23 +72,23 @@ pub fn restore_from_slot_widget(
                 {
                     *slot = None;
                 }
+                let available_slots = global_context.available_slots();
+                // Previous match has asserted that slot_id exists in available slots
+                let mut selected_index =
+                    available_slots.iter().position(|s| *s == slot_id).unwrap();
                 ui.vertical_centered(|ui| {
-                    egui::ComboBox::from_label("Select a slot")
-                        .selected_text(format!("Slot {}", slot_id))
-                        .show_ui(ui, |ui| {
-                            for available_id in global_context.available_slots() {
-                                ui.selectable_value(
-                                    &mut slot_id,
-                                    available_id,
-                                    format!("Slot {}", available_id),
-                                );
-                            }
-                        });
-                    // Ideally we want to update this only when combobox
-                    // changes value, but for immediate mode UI this seems
-                    // to be working fine.
-                    *slot = Some(slot_id);
-                    *manual_edit_value = value.clone();
+                    if egui::ComboBox::from_label("Select a slot")
+                        .show_index(ui, &mut selected_index, available_slots.len(), |i| {
+                            format!("Slot {}", available_slots[i])
+                        })
+                        .changed()
+                    {
+                        *slot = Some(available_slots[selected_index]);
+                        *manual_edit_value = global_context
+                            .fetch_slot(available_slots[selected_index])
+                            .unwrap();
+                        changed = true;
+                    }
                     ui.add(egui::Label::new(value).wrap(true));
                 });
             });
@@ -107,12 +104,17 @@ pub fn restore_from_slot_widget(
                 {
                     *slot = Some(slots[0]);
                 }
-                if multiline {
-                    ui.text_edit_multiline(manual_edit_value);
+                if (if multiline {
+                    ui.text_edit_multiline(manual_edit_value)
                 } else {
-                    ui.text_edit_singleline(manual_edit_value);
+                    ui.text_edit_singleline(manual_edit_value)
+                })
+                .changed()
+                {
+                    changed = true;
                 }
             });
         }
-    }
+    };
+    changed
 }

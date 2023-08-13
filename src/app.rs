@@ -40,8 +40,9 @@ impl RootApp {
         result
     }
 
-    fn add_widget(&mut self, widget: Box<dyn Widget>) {
+    fn add_widget(&mut self, mut widget: Box<dyn Widget>) {
         let id = self.next_id();
+        widget.refresh();
         self.widgets.push((widget, WidgetContext::new(id)));
     }
 }

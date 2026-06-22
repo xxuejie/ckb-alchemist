@@ -4,6 +4,7 @@ import { ScriptAssemblerSpec } from "./specs/script-assembler";
 import { CkbHashSpec } from "./specs/ckb-hash";
 import { ConcatSpec } from "./specs/concat";
 import { SliceSpec } from "./specs/slice";
+import { CellSpec } from "./specs/cell";
 
 const SPECS: NodeSpec[] = [
   HexInputSpec,
@@ -11,6 +12,7 @@ const SPECS: NodeSpec[] = [
   CkbHashSpec,
   ConcatSpec,
   SliceSpec,
+  CellSpec,
 ];
 
 const BY_TYPE: Record<string, NodeSpec> = Object.fromEntries(

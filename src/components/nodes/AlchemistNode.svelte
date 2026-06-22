@@ -68,6 +68,9 @@
           <code class="al-node__hex">{result.value.hex}</code>
         </div>
       {/if}
+      {#if result.info}
+        <div class="al-node__info">{result.info}</div>
+      {/if}
     {:else if result}
       <div class="al-node__error">{result.error}</div>
     {:else}
@@ -178,6 +181,13 @@
   }
   .al-node__pending {
     color: var(--c-text-mute);
+  }
+  .al-node__info {
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px solid var(--c-border);
+    font-size: 11px;
+    color: var(--c-text-dim);
   }
 
   :global(.al-handle) {

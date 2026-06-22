@@ -7,14 +7,13 @@ import type { Hex } from "@ckb-ccc/core";
 export type EdgeType = "Bytes" | "Script" | "Hash" | "Number";
 
 /**
- * Subtyping lattice. `Hash` is a subtype of `Bytes` (32-byte hashes can flow
- * into any Bytes consumer). `Script` is structurally bytes but semantically
- * distinct — it does NOT widen to Bytes to avoid accidental misuse.
- * `Number` is incomparable with the byte-family types.
+ * Subtyping lattice. `Hash` and `Script` are subtypes of `Bytes` (hashes and
+ * serialized scripts can flow into any Bytes consumer). `Number` is
+ * incomparable with the byte-family types.
  */
 export function isAssignable(source: EdgeType, target: EdgeType): boolean {
   if (source === target) return true;
-  if (target === "Bytes" && source === "Hash") return true;
+  if (target === "Bytes" && (source === "Hash" || source === "Script")) return true;
   return false;
 }
 

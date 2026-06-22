@@ -28,6 +28,7 @@
     "ckb-hash": AlchemistNode,
     concat: AlchemistNode,
     slice: AlchemistNode,
+    cell: AlchemistNode,
   };
 
   const edgeTypes: EdgeTypes = {

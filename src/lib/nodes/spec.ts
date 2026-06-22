@@ -1,7 +1,9 @@
 import type { EdgeType, Value } from "./types";
 
 /** Result of evaluating a node. */
-export type EvalResult = { ok: true; value: Value } | { ok: false; error: string };
+export type EvalResult =
+  | { ok: true; value: Value; info?: string }
+  | { ok: false; error: string };
 
 /** Inputs passed to `evaluate`, keyed by input handle id. */
 export type EvalInputs = Record<string, Value | undefined>;

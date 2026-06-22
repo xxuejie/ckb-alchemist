@@ -33,7 +33,7 @@ export function saveHtml(): void {
   // Strip all external scripts injected by CDN/proxy layers (e.g. Cloudflare's
   // beacon.min.js, cdn-cgi scripts). Only inline scripts (our inlined app +
   // #alchemist-state) should survive.
-  clone.querySelectorAll('script[src]').forEach((s) => s.remove());
+  clone.querySelectorAll("script[src]").forEach((s) => s.remove());
 
   const html = "<!DOCTYPE html>\n" + clone.outerHTML;
 

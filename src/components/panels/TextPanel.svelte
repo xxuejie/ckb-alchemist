@@ -45,16 +45,16 @@
 <style>
   .al-text-panel {
     width: 380px;
-    background: #1a1d24;
-    border: 1px solid #2a2e37;
+    background: var(--c-panel);
+    border: 1px solid var(--c-border);
     border-radius: 8px;
     padding: 12px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 4px 16px var(--c-shadow);
   }
   .al-text-panel h3 {
     font-size: 11px;
     text-transform: uppercase;
-    color: #6a6e77;
+    color: var(--c-text-mute);
     margin: 8px 0 4px;
     letter-spacing: 0.05em;
   }
@@ -63,10 +63,10 @@
   }
   .al-text-panel textarea {
     width: 100%;
-    background: #0f1115;
-    border: 1px solid #2a2e37;
+    background: var(--c-bg);
+    border: 1px solid var(--c-border);
     border-radius: 4px;
-    color: #e6e6e6;
+    color: var(--c-text);
     padding: 6px;
     font-size: 11px;
     font-family: ui-monospace, "SF Mono", Menlo, monospace;
@@ -79,17 +79,17 @@
     gap: 6px;
   }
   .al-btn {
-    background: #2a2e37;
-    border: 1px solid #3a3e47;
+    background: var(--c-border);
+    border: 1px solid var(--c-border-strong);
     border-radius: 4px;
-    color: #e6e6e6;
+    color: var(--c-text);
     padding: 4px 10px;
     font-size: 12px;
     cursor: pointer;
     white-space: nowrap;
   }
   .al-btn:hover {
-    background: #3a3e47;
+    background: var(--c-border-strong);
   }
   .al-btn--sm {
     padding: 2px 8px;

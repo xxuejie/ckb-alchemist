@@ -108,22 +108,22 @@
   }
   .al-field__label {
     font-size: 10px;
-    color: #6a6e77;
+    color: var(--c-text-mute);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
   .al-input {
     width: 100%;
-    background: #0f1115;
-    border: 1px solid #2a2e37;
+    background: var(--c-bg);
+    border: 1px solid var(--c-border);
     border-radius: 4px;
-    color: #e6e6e6;
+    color: var(--c-text);
     padding: 3px 6px;
     font-size: 12px;
     outline: none;
   }
   .al-input:focus {
-    border-color: #7c5cff;
+    border-color: var(--c-accent);
   }
   .al-input--mono {
     font-family: ui-monospace, "SF Mono", Menlo, monospace;

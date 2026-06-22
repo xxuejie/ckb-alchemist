@@ -18,7 +18,7 @@
   import Palette from "$components/panels/Palette.svelte";
   import TextPanel from "$components/panels/TextPanel.svelte";
   import { graph } from "$lib/store/graph.svelte";
-  import { ui } from "$lib/store";
+  import { ui, theme } from "$lib/store";
   import { makeConnectionValidator } from "$lib/engine";
   import type { AlchemistEdge as AlchemistEdgeT } from "$lib/engine";
 
@@ -84,7 +84,7 @@
   defaultEdgeOptions={{ type: "alchemist" }}
   connectionLineComponent={AlchemistConnectionLine}
   fitView
-  colorMode="dark"
+  colorMode={theme.current}
 >
   <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
   <Controls />

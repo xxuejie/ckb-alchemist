@@ -1,7 +1,7 @@
 <script lang="ts">
   import { graph } from "$lib/store/graph.svelte";
   import { rpc } from "$lib/store/rpc.svelte";
-  import { session, ui } from "$lib/store";
+  import { session, ui, theme } from "$lib/store";
   import { saveHtml } from "$lib/persistence";
   import { encodeWorkflowText } from "$lib/persistence";
 
@@ -52,6 +52,9 @@
   </div>
 
   <div class="al-topbar__actions">
+    <button class="al-btn" onclick={() => theme.toggle()} title="Toggle dark/light theme">
+      {theme.current === "dark" ? "☀" : "🌙"}
+    </button>
     <button
       class="al-btn"
       onclick={doSaveHtml}
@@ -87,8 +90,8 @@
     align-items: center;
     gap: 16px;
     padding: 8px 12px;
-    background: #1a1d24;
-    border-bottom: 1px solid #2a2e37;
+    background: var(--c-panel);
+    border-bottom: 1px solid var(--c-border);
     height: 44px;
     flex-shrink: 0;
     z-index: 100;
@@ -112,55 +115,55 @@
   }
   .al-topbar__rpc label {
     font-size: 11px;
-    color: #6a6e77;
+    color: var(--c-text-mute);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
   .al-topbar__rpc input {
     flex: 1;
-    background: #0f1115;
-    border: 1px solid #2a2e37;
+    background: var(--c-bg);
+    border: 1px solid var(--c-border);
     border-radius: 4px;
-    color: #e6e6e6;
+    color: var(--c-text);
     padding: 3px 8px;
     font-size: 12px;
     font-family: ui-monospace, "SF Mono", Menlo, monospace;
   }
   .al-topbar__rpc input:focus {
     outline: none;
-    border-color: #7c5cff;
+    border-color: var(--c-accent);
   }
   .al-topbar__rpc-error {
-    color: #d29922;
+    color: var(--c-warn);
   }
   .al-topbar__actions {
     display: flex;
     gap: 6px;
   }
   .al-topbar__dirty {
-    color: #d29922;
+    color: var(--c-warn);
     font-size: 14px;
   }
   .al-topbar__session {
     font-size: 10px;
-    color: #d29922;
-    background: rgba(210, 153, 34, 0.1);
-    border: 1px solid #d29922;
+    color: var(--c-warn);
+    background: color-mix(in srgb, var(--c-warn) 10%, transparent);
+    border: 1px solid var(--c-warn);
     border-radius: 3px;
     padding: 1px 6px;
     text-transform: uppercase;
   }
   .al-btn {
-    background: #2a2e37;
-    border: 1px solid #3a3e47;
+    background: var(--c-border);
+    border: 1px solid var(--c-border-strong);
     border-radius: 4px;
-    color: #e6e6e6;
+    color: var(--c-text);
     padding: 4px 10px;
     font-size: 12px;
     cursor: pointer;
     white-space: nowrap;
   }
   .al-btn:hover {
-    background: #3a3e47;
+    background: var(--c-border-strong);
   }
 </style>

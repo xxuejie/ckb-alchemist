@@ -30,13 +30,13 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    background: rgba(163, 113, 95, 0.95);
-    border: 1px solid #a3715f;
+    background: color-mix(in srgb, var(--c-err) 95%, transparent);
+    border: 1px solid var(--c-err);
     border-radius: 6px;
     padding: 6px 12px;
     font-size: 12px;
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    color: var(--c-text);
+    box-shadow: 0 2px 8px var(--c-shadow);
   }
   .al-banner__text {
     flex: 1;
@@ -44,12 +44,12 @@
   .al-banner__close {
     background: none;
     border: none;
-    color: rgba(255, 255, 255, 0.7);
+    color: color-mix(in srgb, var(--c-text) 70%, transparent);
     cursor: pointer;
     font-size: 14px;
     padding: 0 2px;
   }
   .al-banner__close:hover {
-    color: #fff;
+    color: var(--c-text);
   }
 </style>

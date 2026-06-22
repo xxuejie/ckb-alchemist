@@ -57,8 +57,8 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    background: #1a1d24;
-    border: 1px solid #2a2e37;
+    background: var(--c-panel);
+    border: 1px solid var(--c-border);
     border-radius: 4px;
     padding: 1px 5px;
     font-size: 10px;
@@ -72,18 +72,18 @@
   }
   .al-edge-label__preview {
     font-family: ui-monospace, "SF Mono", Menlo, monospace;
-    color: #b0b4bd;
+    color: var(--c-text-dim);
   }
   .al-edge-label--Bytes .al-edge-label__type {
-    color: #58a6ff;
+    color: var(--c-bytes);
   }
   .al-edge-label--Script .al-edge-label__type {
-    color: #d29922;
+    color: var(--c-warn);
   }
   .al-edge-label--Hash .al-edge-label__type {
-    color: #7c5cff;
+    color: var(--c-accent);
   }
   .al-edge-label--Number .al-edge-label__type {
-    color: #3fb950;
+    color: var(--c-ok);
   }
 </style>

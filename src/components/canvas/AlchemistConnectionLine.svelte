@@ -37,7 +37,7 @@
   <path
     d={geometry[0]}
     fill="none"
-    stroke={isInvalid ? "#a3715f" : "#7c5cff"}
+    stroke={isInvalid ? "var(--c-err)" : "var(--c-accent)"}
     stroke-width={2}
     stroke-dasharray={isInvalid ? "6 4" : undefined}
     class="svelte-flow__connection-path"
@@ -50,15 +50,15 @@
         width={104}
         height={18}
         rx={4}
-        fill="#1a1d24"
-        stroke="#a3715f"
+        fill="var(--c-panel)"
+        stroke="var(--c-err)"
         stroke-width={1}
       />
       <text
         x={0}
         y={3}
         text-anchor="middle"
-        fill="#a3715f"
+        fill="var(--c-err)"
         font-size={10}
         font-family="ui-sans-serif, system-ui, sans-serif"
       >

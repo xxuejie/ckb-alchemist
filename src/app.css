@@ -2,6 +2,49 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Dark theme (default) */
+  --c-bg: #0f1115;
+  --c-panel: #1a1d24;
+  --c-panel-hover: #15171c;
+  --c-border: #2a2e37;
+  --c-border-strong: #3a3e47;
+  --c-text: #e6e6e6;
+  --c-text-dim: #b0b4bd;
+  --c-text-mute: #6a6e77;
+  --c-accent: #7c5cff;
+  --c-ok: #3fb950;
+  --c-warn: #d29922;
+  --c-err: #a3715f;
+  --c-bytes: #58a6ff;
+  --c-script: #d29922;
+  --c-hash: #7c5cff;
+  --c-number: #3fb950;
+  --c-input-bg: #0f1115;
+  --c-shadow: rgba(0, 0, 0, 0.4);
+}
+
+:root.light {
+  --c-bg: #f8f9fa;
+  --c-panel: #ffffff;
+  --c-panel-hover: #f0f1f3;
+  --c-border: #e2e6ea;
+  --c-border-strong: #d0d5dd;
+  --c-text: #1a1d24;
+  --c-text-dim: #4a4e57;
+  --c-text-mute: #8a8e97;
+  --c-accent: #6b46c1;
+  --c-ok: #2d8a3e;
+  --c-warn: #b8860b;
+  --c-err: #c53030;
+  --c-bytes: #0969da;
+  --c-script: #b8860b;
+  --c-hash: #6b46c1;
+  --c-number: #2d8a3e;
+  --c-input-bg: #f8f9fa;
+  --c-shadow: rgba(0, 0, 0, 0.12);
+}
+
 html,
 body,
 #app {
@@ -10,8 +53,8 @@ body,
 }
 
 body {
-  background: theme("colors.ckb.bg");
-  color: #e6e6e6;
+  background: var(--c-bg);
+  color: var(--c-text);
   font-family:
     ui-sans-serif,
     system-ui,
@@ -22,5 +65,5 @@ body {
 }
 
 .svelte-flow {
-  background: #0f1115;
+  background: var(--c-bg);
 }

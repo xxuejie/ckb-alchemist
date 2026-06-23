@@ -32,8 +32,8 @@ class GraphStore {
 
   private snapshot() {
     return {
-      nodes: structuredClone(this.nodes.map((n) => ({ ...n, data: { ...n.data } }))),
-      edges: structuredClone(this.edges.map((e) => ({ ...e }))),
+      nodes: JSON.parse(JSON.stringify(this.nodes)) as AlchemistNode[],
+      edges: JSON.parse(JSON.stringify(this.edges)) as AlchemistEdge[],
     };
   }
 

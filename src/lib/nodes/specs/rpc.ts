@@ -19,6 +19,7 @@ export const RpcSpec: NodeSpec = {
     { id: "outPoint", label: "out_point", type: "Bytes", optional: true },
     { id: "hash", label: "block_hash", type: "Hash", optional: true },
     { id: "number", label: "block_number", type: "Number", optional: true },
+    { id: "script", label: "script", type: "Bytes", optional: true },
   ],
   output: { id: "out", label: "RPC Result", type: "Bytes" },
   params: [

@@ -18,20 +18,39 @@
   let fetchState = $state<"idle" | "fetching" | "error">("idle");
   let fetchError = $state("");
 
-  // Current URL for display — derived from params or global RPC store.
   const rpcUrl = $derived((params.rpcUrl as string) ?? rpcStore.url);
 
+  // Pagination state
+  const cursor = $derived((params.__rpcCursor as string) ?? "");
+  const hasMore = $derived((params.__rpcHasMore as boolean) ?? false);
+
   function onMethodChange(e: Event) {
-    const val = (e.currentTarget as HTMLSelectElement).value;
-    graph.updateNodeParams(id, { method: val, __rpcResult: "" });
+    graph.updateNodeParams(id, {
+      method: (e.currentTarget as HTMLSelectElement).value,
+      __rpcResult: "",
+      __rpcCursor: "",
+      __rpcHasMore: false,
+    });
   }
 
   function onUrlChange(e: Event) {
-    const url = (e.currentTarget as HTMLInputElement).value;
-    graph.updateNodeParams(id, { rpcUrl: url, __rpcResult: "" });
+    graph.updateNodeParams(id, {
+      rpcUrl: (e.currentTarget as HTMLInputElement).value,
+      __rpcResult: "",
+      __rpcCursor: "",
+      __rpcHasMore: false,
+    });
   }
 
-  /** Read the current value of an upstream input by handle id. */
+  function onParamChange(paramId: string, value: string) {
+    graph.updateNodeParams(id, {
+      [paramId]: value,
+      __rpcResult: "",
+      __rpcCursor: "",
+      __rpcHasMore: false,
+    });
+  }
+
   function getInputValue(handleId: string): Value | undefined {
     const edge = graph.edges.find(
       (e) => e.target === id && e.targetHandle === handleId,
@@ -42,7 +61,7 @@
     return undefined;
   }
 
-  async function doFetch() {
+  async function doFetch(nextPage = false) {
     const inputs: Record<string, Value | undefined> = {};
     for (const inp of method.inputs) {
       const val = getInputValue(inp.id);
@@ -57,8 +76,13 @@
     fetchState = "fetching";
     fetchError = "";
     try {
-      const value = await method.fetch(rpcUrl, inputs);
-      graph.updateNodeParams(id, { __rpcResult: JSON.stringify(value) });
+      const fetchCursor = nextPage ? cursor || undefined : undefined;
+      const result = await method.fetch(rpcUrl, inputs, params, fetchCursor);
+      graph.updateNodeParams(id, {
+        __rpcResult: JSON.stringify(result.value),
+        __rpcCursor: result.nextCursor ?? "",
+        __rpcHasMore: result.hasMore ?? false,
+      });
       fetchState = "idle";
     } catch (e) {
       fetchState = "error";
@@ -70,7 +94,11 @@
   let prevMethod = $state("");
   $effect(() => {
     if (methodId !== prevMethod && prevMethod !== "") {
-      graph.updateNodeParams(id, { __rpcResult: "" });
+      graph.updateNodeParams(id, {
+        __rpcResult: "",
+        __rpcCursor: "",
+        __rpcHasMore: false,
+      });
     }
     prevMethod = methodId;
   });
@@ -79,11 +107,11 @@
 <div
   class="al-node al-rpc"
   class:selected
-  class:errored={fetchState === "error" || (!result?.ok && result !== undefined)}
+  class:errored={fetchState === "error"}
   role="group"
   tabindex="-1"
 >
-  <NodeResizer isVisible={selected} minWidth={240} minHeight={80} />
+  <NodeResizer isVisible={selected} minWidth={260} minHeight={80} />
 
   <header class="al-node__header">
     <span class="al-node__title">RPC</span>
@@ -92,11 +120,7 @@
 
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <section class="al-rpc__config nodrag" onpointerdown={(e) => e.stopPropagation()}>
-    <select
-      class="al-rpc__select al-input"
-      value={methodId}
-      onchange={onMethodChange}
-    >
+    <select class="al-rpc__select al-input" value={methodId} onchange={onMethodChange}>
       {#each RPC_METHODS as m (m.id)}
         <option value={m.id}>{m.label}</option>
       {/each}
@@ -111,16 +135,58 @@
       spellcheck="false"
     />
 
-    <button class="al-rpc__fetch" onclick={doFetch} disabled={fetchState === "fetching"}>
-      {fetchState === "fetching" ? "Loading…" : "Fetch"}
-    </button>
+    {#each method.params as p (p.id)}
+      {#if p.kind === "select"}
+        <div class="al-rpc__param-row">
+          <span class="al-rpc__param-label">{p.label}</span>
+          <select
+            class="al-input al-rpc__param-input"
+            value={(params[p.id] as string) ?? p.default}
+            onchange={(e) => onParamChange(p.id, (e.currentTarget as HTMLSelectElement).value)}
+          >
+            {#each p.options as opt (opt)}
+              <option value={opt}>{opt}</option>
+            {/each}
+          </select>
+        </div>
+      {:else}
+        <div class="al-rpc__param-row">
+          <span class="al-rpc__param-label">{p.label}</span>
+          <input
+            class="al-input al-rpc__param-input"
+            type="text"
+            inputmode="numeric"
+            value={(params[p.id] as string) ?? p.default}
+            onchange={(e) => onParamChange(p.id, e.currentTarget.value)}
+          />
+        </div>
+      {/if}
+    {/each}
+
+    <div class="al-rpc__buttons">
+      <button
+        class="al-rpc__fetch"
+        onclick={() => doFetch(false)}
+        disabled={fetchState === "fetching"}
+      >
+        {fetchState === "fetching" ? "Loading…" : "Fetch"}
+      </button>
+      {#if hasMore}
+        <button
+          class="al-rpc__next"
+          onclick={() => doFetch(true)}
+          disabled={fetchState === "fetching"}
+        >
+          → Next
+        </button>
+      {/if}
+    </div>
 
     {#if fetchState === "error"}
       <div class="al-rpc__error">{fetchError}</div>
     {/if}
   </section>
 
-  <!-- Dynamic input handles based on selected method -->
   <section class="al-node__inputs">
     {#each method.inputs as inp (inp.id)}
       <div class="al-node__row">
@@ -138,7 +204,6 @@
     {/each}
   </section>
 
-  <!-- Result -->
   <section class="al-node__result">
     {#if result?.ok}
       <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -153,9 +218,10 @@
     {/if}
   </section>
 
-  <!-- Cache indicator -->
   {#if params.__rpcResult && params.__rpcResult !== ""}
-    <div class="al-rpc__cached">● cached</div>
+    <div class="al-rpc__cached">
+      ● cached{#if hasMore} · page available{/if}
+    </div>
   {/if}
 
   <Handle
@@ -169,7 +235,7 @@
 <style>
   .al-rpc {
     width: 100%;
-    min-width: 240px;
+    min-width: 260px;
     background: var(--c-panel);
     border: 1px solid var(--c-border);
     border-radius: 8px;
@@ -222,7 +288,29 @@
     font-family: ui-monospace, "SF Mono", Menlo, monospace;
     font-size: 10px;
   }
-  .al-rpc__fetch {
+  .al-rpc__param-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .al-rpc__param-label {
+    font-size: 10px;
+    color: var(--c-text-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+    min-width: 70px;
+  }
+  .al-rpc__param-input {
+    flex: 1;
+  }
+  .al-rpc__buttons {
+    display: flex;
+    gap: 6px;
+  }
+  .al-rpc__fetch,
+  .al-rpc__next {
+    flex: 1;
     background: var(--c-border-strong);
     border: 1px solid var(--c-border-strong);
     border-radius: 4px;
@@ -235,7 +323,15 @@
     background: var(--c-accent);
     border-color: var(--c-accent);
   }
-  .al-rpc__fetch:disabled {
+  .al-rpc__next {
+    flex: 0 0 auto;
+  }
+  .al-rpc__next:hover:not(:disabled) {
+    background: var(--c-ok);
+    border-color: var(--c-ok);
+  }
+  .al-rpc__fetch:disabled,
+  .al-rpc__next:disabled {
     opacity: 0.5;
     cursor: wait;
   }

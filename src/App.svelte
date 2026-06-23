@@ -2,6 +2,7 @@
   import Canvas from "$components/canvas/Canvas.svelte";
   import TopBar from "$components/panels/TopBar.svelte";
   import ErrorBanner from "$components/panels/ErrorBanner.svelte";
+  import SharePanel from "$components/panels/SharePanel.svelte";
   import { boot } from "$lib/persistence";
   import { session } from "$lib/store/session.svelte";
 
@@ -11,17 +12,14 @@
   $effect(() => {
     if (booted) return;
     booted = true;
-    try {
-      boot();
-    } catch (e) {
-      console.error("Boot failed:", e);
-    }
+    boot().catch((e) => console.error("Boot failed:", e));
   });
 </script>
 
 <div class="al-app">
   <TopBar />
   <ErrorBanner />
+  <SharePanel />
   {#if booted && session.booted}
     <main class="al-canvas">
       <Canvas />

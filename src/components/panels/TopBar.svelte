@@ -115,23 +115,6 @@
   {/if}
 </header>
 
-{#if ui.shareUrl}
-  <div class="al-share">
-    <input class="al-share__url al-input" readonly value={ui.shareUrl} />
-    <button
-      class="al-btn al-btn--sm"
-      onclick={async () => {
-        try {
-          await navigator.clipboard.writeText(ui.shareUrl);
-        } catch {
-          // clipboard may be unavailable
-        }
-      }}>📋 Copy</button
-    >
-    <button class="al-btn al-btn--sm" onclick={() => ui.closeSharePanel()}>Close</button>
-  </div>
-{/if}
-
 <style>
   .al-topbar {
     display: flex;
@@ -217,18 +200,5 @@
   .al-btn:disabled {
     opacity: 0.35;
     cursor: default;
-  }
-  .al-share {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 12px;
-    background: var(--c-panel);
-    border-bottom: 1px solid var(--c-border);
-  }
-  .al-share__url {
-    flex: 1;
-    font-family: ui-monospace, "SF Mono", Menlo, monospace;
-    font-size: 10px;
   }
 </style>

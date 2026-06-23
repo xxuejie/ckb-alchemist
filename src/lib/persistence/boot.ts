@@ -18,8 +18,9 @@ import { startPersistenceMirror } from "./mirror.svelte";
  *
  * Web URLs (`https://`):
  *   1. `?data=` query param → decode → seed
- *   2. localStorage → seed
- *   3. default seed
+ *   2. `?gist=` query param → fetch from GitHub gist → seed
+ *   3. localStorage → seed
+ *   4. default seed
  *
  * `file://`:
  *   1. `#alchemist-state` (populated by prior Save HTML) → seed
@@ -28,11 +29,29 @@ import { startPersistenceMirror } from "./mirror.svelte";
  * Query params on `file://` are unreliable and ignored.
  */
 export interface BootResult {
-  source: "url" | "embedded" | "localStorage" | "seed";
+  source: "url" | "gist" | "embedded" | "localStorage" | "seed";
   workflow: WorkflowJson;
 }
 
-export function boot(): BootResult {
+/** Extracts a gist ID from a bare ID or full gist URL. */
+function extractGistId(raw: string): string {
+  const m = raw.match(/([a-f0-9]{7,})/i);
+  return m ? m[1]! : raw;
+}
+
+/** Fetches workflow JSON from a GitHub gist by ID. */
+async function fetchGist(gistId: string): Promise<WorkflowJson> {
+  const res = await fetch(`https://api.github.com/gists/${gistId}`);
+  if (!res.ok) {
+    throw new Error(`GitHub API returned ${res.status}`);
+  }
+  const data = (await res.json()) as { files: Record<string, { content: string }> };
+  const files = Object.values(data.files);
+  if (files.length === 0) throw new Error("Gist has no files");
+  return parseWorkflowJson(files[0]!.content);
+}
+
+export async function boot(): Promise<BootResult> {
   let workflow: WorkflowJson | null = null;
   let source: BootResult["source"] = "seed";
 
@@ -43,9 +62,11 @@ export function boot(): BootResult {
       if (workflow) source = "embedded";
     }
   } else {
-    // Check ?data= query param first (shareable URL)
     const params = new URLSearchParams(location.search);
     const dataParam = params.get("data");
+    const gistParam = params.get("gist");
+
+    // 1. ?data= (synchronous)
     if (dataParam) {
       try {
         workflow = decodeWorkflowText(dataParam);
@@ -55,11 +76,24 @@ export function boot(): BootResult {
           `Failed to load workflow from URL: ${(e as Error).message}. Loaded from fallback instead.`,
         );
       }
-      // Strip the query param so refresh doesn't re-trigger
       history.replaceState(null, "", location.pathname);
     }
 
-    // Fall back to localStorage
+    // 2. ?gist= (async fetch)
+    if (!workflow && gistParam) {
+      const gistId = extractGistId(gistParam);
+      try {
+        workflow = await fetchGist(gistId);
+        source = "gist";
+      } catch (e) {
+        banner.show(
+          `Failed to load workflow from gist: ${(e as Error).message}. Loaded from fallback instead.`,
+        );
+      }
+      history.replaceState(null, "", location.pathname);
+    }
+
+    // 3. localStorage
     if (!workflow) {
       const ls = readLocalStorage();
       if (ls) {
@@ -80,15 +114,11 @@ export function boot(): BootResult {
   graph.loadGraph(nodes, edges);
   rpc.setUrl(rpcUrl);
 
-  // Capture clean snapshot BEFORE starting the mirror effect so the first
-  // effect run doesn't flag the boot state as dirty.
+  // Capture clean snapshot BEFORE starting the mirror effect.
   session.markClean(JSON.stringify(toWorkflowJson(graph.nodes, graph.edges, rpc.url)));
   session.markBooted();
 
-  // Start the live mirror now that boot state is captured.
   startPersistenceMirror();
-
-  // beforeunload dirty-state protection (file:// + session-only).
   installBeforeUnloadGuard();
 
   return { source, workflow };

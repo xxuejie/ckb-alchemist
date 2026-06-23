@@ -13,6 +13,7 @@
   import "@xyflow/svelte/dist/base.css";
 
   import AlchemistNode from "$components/nodes/AlchemistNode.svelte";
+  import RpcNode from "$components/nodes/RpcNode.svelte";
   import AlchemistEdge from "$components/edges/AlchemistEdge.svelte";
   import AlchemistConnectionLine from "$components/canvas/AlchemistConnectionLine.svelte";
   import Palette from "$components/panels/Palette.svelte";
@@ -31,6 +32,7 @@
     cell: AlchemistNode,
     "out-point": AlchemistNode,
     transaction: AlchemistNode,
+    rpc: RpcNode,
   };
 
   const edgeTypes: EdgeTypes = {

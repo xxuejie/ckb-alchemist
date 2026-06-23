@@ -7,6 +7,7 @@ import { SliceSpec } from "./specs/slice";
 import { CellSpec } from "./specs/cell";
 import { OutPointSpec } from "./specs/out-point";
 import { TransactionSpec } from "./specs/transaction";
+import { RpcSpec } from "./specs/rpc";
 
 const SPECS: NodeSpec[] = [
   HexInputSpec,
@@ -17,6 +18,7 @@ const SPECS: NodeSpec[] = [
   CellSpec,
   OutPointSpec,
   TransactionSpec,
+  RpcSpec,
 ];
 
 const BY_TYPE: Record<string, NodeSpec> = Object.fromEntries(

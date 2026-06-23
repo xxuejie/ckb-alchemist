@@ -62,8 +62,9 @@ export const session = {
   },
 
   /** Called by BootDialog when user picks a source. */
-  chooseSource(source: BootSource) {
+  chooseSource(source: BootSource, sessionOnly = false) {
     state.pendingSources = null;
+    if (sessionOnly) state.sessionOnly = true;
     resolveChoice?.(source);
     resolveChoice = null;
   },

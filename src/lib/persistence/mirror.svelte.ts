@@ -17,7 +17,7 @@ function snapshot(): string {
 function writeNow(): void {
   const text = snapshot();
   writeEmbeddedState(text);
-  if (isWebProtocol()) writeLocalStorage(text);
+  if (isWebProtocol() && !session.sessionOnly) writeLocalStorage(text);
   pendingWrite = false;
 }
 

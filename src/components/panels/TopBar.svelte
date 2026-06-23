@@ -109,7 +109,10 @@
     <span class="al-topbar__dirty" title="Unsaved changes">●</span>
   {/if}
   {#if session.sessionOnly}
-    <span class="al-topbar__session" title="This session won't persist to localStorage">
+    <span
+      class="al-topbar__session"
+      title="This session won't persist to your browser. Use Save HTML or Export Text to keep your work."
+    >
       session-only
     </span>
   {/if}

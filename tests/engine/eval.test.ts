@@ -119,14 +119,14 @@ describe("connection validator", () => {
     expect(validate(c)).toBe(true);
   });
 
-  it("rejects Bytes -> Hash (narrowing)", () => {
+  it("accepts Bytes -> Hash (cross-type, runtime-validated)", () => {
     const c: Connection = {
       source: "h",
       target: "s",
       sourceHandle: "out",
       targetHandle: "code_hash",
     };
-    expect(validate(c)).toBe(false);
+    expect(validate(c)).toBe(true);
   });
 
   it("rejects self-connections", () => {

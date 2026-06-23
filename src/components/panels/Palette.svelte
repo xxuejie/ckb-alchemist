@@ -2,7 +2,25 @@
   import { specsByCategory } from "$lib/nodes";
   import { graph } from "$lib/store/graph.svelte";
 
-  const groups = specsByCategory();
+  let search = $state("");
+
+  const allGroups = specsByCategory();
+
+  const filtered = $derived.by(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return allGroups;
+    return allGroups
+      .map((g) => ({
+        ...g,
+        specs: g.specs.filter(
+          (s) =>
+            s.label.toLowerCase().includes(q) ||
+            s.description.toLowerCase().includes(q) ||
+            s.type.toLowerCase().includes(q),
+        ),
+      }))
+      .filter((g) => g.specs.length > 0);
+  });
 
   function addNode(type: string) {
     graph.addNode(type, {
@@ -13,23 +31,38 @@
 </script>
 
 <div class="al-palette">
-  {#each groups as group (group.category)}
-    <h3 class="al-palette__category">{group.category}</h3>
-    {#each group.specs as spec (spec.type)}
-      <button
-        class="al-palette__item"
-        onclick={() => addNode(spec.type)}
-        title={spec.description}
-      >
-        <span class="al-palette__label">{spec.label}</span>
-        {#if spec.output}
-          <span class="al-palette__out al-palette__out--{spec.output.type}"
-            >{spec.output.type}</span
-          >
-        {/if}
-      </button>
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="al-palette__search nodrag" onpointerdown={(e) => e.stopPropagation()}>
+    <input
+      class="al-palette__search-input"
+      type="text"
+      placeholder="Search widgets…"
+      bind:value={search}
+    />
+  </div>
+
+  <div class="al-palette__list">
+    {#each filtered as group (group.category)}
+      <h3 class="al-palette__category">{group.category}</h3>
+      {#each group.specs as spec (spec.type)}
+        <button
+          class="al-palette__item"
+          onclick={() => addNode(spec.type)}
+          title={spec.description}
+        >
+          <span class="al-palette__label">{spec.label}</span>
+          {#if spec.output}
+            <span class="al-palette__out al-palette__out--{spec.output.type}"
+              >{spec.output.type}</span
+            >
+          {/if}
+        </button>
+      {/each}
     {/each}
-  {/each}
+    {#if filtered.length === 0}
+      <div class="al-palette__empty">No widgets found</div>
+    {/if}
+  </div>
 </div>
 
 <style>
@@ -37,20 +70,39 @@
     background: var(--c-panel);
     border: 1px solid var(--c-border);
     border-radius: 8px;
-    padding: 8px;
-    min-width: 180px;
     display: flex;
     flex-direction: column;
-    gap: 2px;
     box-shadow: 0 2px 8px var(--c-shadow);
-    max-height: 80vh;
+    width: 220px;
+    max-height: 70vh;
+  }
+  .al-palette__search {
+    padding: 6px;
+    border-bottom: 1px solid var(--c-border);
+  }
+  .al-palette__search-input {
+    width: 100%;
+    background: var(--c-input-bg);
+    border: 1px solid var(--c-border);
+    border-radius: 4px;
+    color: var(--c-text);
+    padding: 3px 8px;
+    font-size: 12px;
+    outline: none;
+  }
+  .al-palette__search-input:focus {
+    border-color: var(--c-accent);
+  }
+  .al-palette__list {
     overflow-y: auto;
+    padding: 4px 6px;
+    flex: 1;
   }
   .al-palette__category {
     font-size: 10px;
     text-transform: uppercase;
     color: var(--c-text-mute);
-    margin: 8px 0 2px;
+    margin: 6px 4px 2px;
     letter-spacing: 0.05em;
     border-bottom: 1px solid var(--c-border);
     padding-bottom: 2px;
@@ -66,6 +118,7 @@
     border: 1px solid var(--c-border);
     border-radius: 4px;
     padding: 4px 8px;
+    margin-bottom: 2px;
     cursor: pointer;
     text-align: left;
     width: 100%;
@@ -95,5 +148,11 @@
   }
   .al-palette__out--Number {
     color: var(--c-number);
+  }
+  .al-palette__empty {
+    color: var(--c-text-mute);
+    font-size: 12px;
+    padding: 12px;
+    text-align: center;
   }
 </style>

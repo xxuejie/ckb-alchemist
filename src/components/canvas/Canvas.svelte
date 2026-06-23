@@ -141,7 +141,9 @@
   <Controls />
   <MiniMap pannable zoomable />
   <Panel position="top-left">
-    <Palette />
+    {#if ui.showPalette}
+      <Palette />
+    {/if}
   </Panel>
   {#if ui.showTextPanel}
     <Panel position="top-right">

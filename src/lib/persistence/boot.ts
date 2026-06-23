@@ -9,24 +9,26 @@ import {
   toWorkflowJson,
   type WorkflowJson,
 } from "./schema";
+import { decodeWorkflowText } from "./codec";
 import { isFileProtocol, readEmbeddedState, readLocalStorage } from "./storage";
 import { startPersistenceMirror } from "./mirror.svelte";
 
 /**
- * Boot sequence (PLAN §7.6). Phase 1 excludes the shareable-URL paths
- * (`?data=` / `?gist=`) and the selection dialog — those land in Phase 2.
+ * Boot sequence (PLAN §7.6).
  *
  * Web URLs (`https://`):
- *   1. (Phase 2: ?data= / ?gist= selection dialog)
+ *   1. `?data=` query param → decode → seed
  *   2. localStorage → seed
  *   3. default seed
  *
  * `file://`:
  *   1. `#alchemist-state` (populated by prior Save HTML) → seed
  *   2. default seed
+ *
+ * Query params on `file://` are unreliable and ignored.
  */
 export interface BootResult {
-  source: "embedded" | "localStorage" | "seed";
+  source: "url" | "embedded" | "localStorage" | "seed";
   workflow: WorkflowJson;
 }
 
@@ -41,10 +43,29 @@ export function boot(): BootResult {
       if (workflow) source = "embedded";
     }
   } else {
-    const ls = readLocalStorage();
-    if (ls) {
-      workflow = safeParse(ls, "browser storage");
-      if (workflow) source = "localStorage";
+    // Check ?data= query param first (shareable URL)
+    const params = new URLSearchParams(location.search);
+    const dataParam = params.get("data");
+    if (dataParam) {
+      try {
+        workflow = decodeWorkflowText(dataParam);
+        source = "url";
+      } catch (e) {
+        banner.show(
+          `Failed to load workflow from URL: ${(e as Error).message}. Loaded from fallback instead.`,
+        );
+      }
+      // Strip the query param so refresh doesn't re-trigger
+      history.replaceState(null, "", location.pathname);
+    }
+
+    // Fall back to localStorage
+    if (!workflow) {
+      const ls = readLocalStorage();
+      if (ls) {
+        workflow = safeParse(ls, "browser storage");
+        if (workflow) source = "localStorage";
+      }
     }
   }
 

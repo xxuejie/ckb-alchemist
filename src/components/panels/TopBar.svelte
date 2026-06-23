@@ -19,6 +19,12 @@
     ui.openTextPanel(encodeWorkflowText(graph.nodes, graph.edges, rpc.url));
   }
 
+  async function doShare() {
+    const encoded = encodeWorkflowText(graph.nodes, graph.edges, rpc.url);
+    const url = `${location.origin}${location.pathname}?data=${encoded}`;
+    ui.openSharePanel(url);
+  }
+
   function onResetSeed() {
     if (
       session.dirty &&
@@ -54,6 +60,13 @@
   <div class="al-topbar__actions">
     <button
       class="al-btn"
+      onclick={() => ui.togglePalette()}
+      title="Show/hide widget palette"
+    >
+      {ui.showPalette ? "⊟" : "⊞"}
+    </button>
+    <button
+      class="al-btn"
       onclick={() => graph.undo()}
       disabled={!graph.canUndo}
       title="Undo (Ctrl+Z)">↶</button
@@ -77,6 +90,9 @@
     >
       💾 Save HTML
     </button>
+    <button class="al-btn" onclick={doShare} title="Generate shareable URL">
+      🔗 Share
+    </button>
     <button
       class="al-btn"
       onclick={doExportText}
@@ -98,6 +114,23 @@
     </span>
   {/if}
 </header>
+
+{#if ui.shareUrl}
+  <div class="al-share">
+    <input class="al-share__url al-input" readonly value={ui.shareUrl} />
+    <button
+      class="al-btn al-btn--sm"
+      onclick={async () => {
+        try {
+          await navigator.clipboard.writeText(ui.shareUrl);
+        } catch {
+          // clipboard may be unavailable
+        }
+      }}>📋 Copy</button
+    >
+    <button class="al-btn al-btn--sm" onclick={() => ui.closeSharePanel()}>Close</button>
+  </div>
+{/if}
 
 <style>
   .al-topbar {
@@ -184,5 +217,18 @@
   .al-btn:disabled {
     opacity: 0.35;
     cursor: default;
+  }
+  .al-share {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    background: var(--c-panel);
+    border-bottom: 1px solid var(--c-border);
+  }
+  .al-share__url {
+    flex: 1;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10px;
   }
 </style>

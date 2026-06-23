@@ -10,17 +10,29 @@ import {
 import type { TransactionLike, CellOutputLike } from "@ckb-ccc/core";
 import { asHex, type EdgeType, type Value } from "./types";
 
-/** Raw CKB JSON-RPC call. */
+/** Raw CKB JSON-RPC call with 30s timeout. */
 async function ckbRpc(url: string, method: string, params: unknown[]): Promise<unknown> {
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id: Date.now(), jsonrpc: "2.0", method, params }),
-  });
-  const json = await res.json();
-  if (json.error)
-    throw new Error(`RPC error (${json.error.code}): ${json.error.message}`);
-  return json.result;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: Date.now(), jsonrpc: "2.0", method, params }),
+      signal: controller.signal,
+    });
+    const json = await res.json();
+    if (json.error)
+      throw new Error(`RPC error (${json.error.code}): ${json.error.message}`);
+    return json.result;
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") {
+      throw new Error("RPC request timed out (30s)", { cause: e });
+    }
+    throw e;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 /** Encode a JS object as hex-encoded UTF-8 Bytes value. */

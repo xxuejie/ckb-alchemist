@@ -135,12 +135,25 @@ function extractGistId(raw: string): string {
 }
 
 async function fetchGist(gistId: string): Promise<WorkflowJson> {
-  const res = await fetch(`https://api.github.com/gists/${gistId}`);
-  if (!res.ok) throw new Error(`GitHub API returned ${res.status}`);
-  const data = (await res.json()) as { files: Record<string, { content: string }> };
-  const files = Object.values(data.files);
-  if (files.length === 0) throw new Error("Gist has no files");
-  return parseWorkflowJson(files[0]!.content);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`GitHub API returned ${res.status}`);
+    const data = (await res.json()) as { files: Record<string, { content: string }> };
+    const files = Object.values(data.files);
+    if (files.length === 0) throw new Error("Gist has no files");
+    return parseWorkflowJson(files[0]!.content);
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") {
+      throw new Error("Gist fetch timed out (15s)", { cause: e });
+    }
+    throw e;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 function stripQueryParams(): void {

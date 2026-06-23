@@ -85,6 +85,12 @@
     graph.pushUndo();
   }
 
+  // Snapshot for undo BEFORE Svelte Flow modifies the arrays
+  async function onBeforeDelete() {
+    graph.pushUndo();
+    return true;
+  }
+
   // With bind:nodes/edges, Svelte Flow has already updated the arrays.
   // We only need to reset the selected node if it was deleted.
   function onDelete({ nodes: deletedNodes }: { nodes: { id: string }[] }) {
@@ -131,6 +137,7 @@
   onnodeclick={onNodeClick}
   onpaneclick={onPaneClick}
   onnodedragstart={onNodeDragStart}
+  onbeforedelete={onBeforeDelete}
   ondelete={onDelete}
   defaultEdgeOptions={{ type: "alchemist" }}
   connectionLineComponent={AlchemistConnectionLine}

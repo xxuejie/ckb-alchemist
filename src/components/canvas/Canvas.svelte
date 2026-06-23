@@ -32,6 +32,7 @@
     cell: AlchemistNode,
     "out-point": AlchemistNode,
     transaction: AlchemistNode,
+    header: AlchemistNode,
     rpc: RpcNode,
   };
 

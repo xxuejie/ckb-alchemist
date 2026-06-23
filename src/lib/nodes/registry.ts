@@ -8,6 +8,7 @@ import { CellSpec } from "./specs/cell";
 import { OutPointSpec } from "./specs/out-point";
 import { TransactionSpec } from "./specs/transaction";
 import { RpcSpec } from "./specs/rpc";
+import { HeaderSpec } from "./specs/header";
 
 const SPECS: NodeSpec[] = [
   HexInputSpec,
@@ -18,6 +19,7 @@ const SPECS: NodeSpec[] = [
   CellSpec,
   OutPointSpec,
   TransactionSpec,
+  HeaderSpec,
   RpcSpec,
 ];
 

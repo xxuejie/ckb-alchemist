@@ -1,4 +1,4 @@
-import { OutPoint, Transaction, CellOutput, hexFrom, numToHex } from "@ckb-ccc/core";
+import { OutPoint, Transaction, CellOutput, hexFrom, numToHex, bytesFrom } from "@ckb-ccc/core";
 import type { TransactionLike, CellOutputLike } from "@ckb-ccc/core";
 import { asHex, type EdgeType, type Value } from "./types";
 
@@ -12,6 +12,11 @@ async function ckbRpc(url: string, method: string, params: unknown[]): Promise<u
   const json = await res.json();
   if (json.error) throw new Error(`RPC error (${json.error.code}): ${json.error.message}`);
   return json.result;
+}
+
+/** Encode a JS object as hex-encoded UTF-8 Bytes value (for passing structured data on edges). */
+function jsonToValue(obj: unknown): Value {
+  return { type: "Bytes", hex: hexFrom(bytesFrom(JSON.stringify(obj), "utf8")) };
 }
 
 export interface RpcMethodInput {
@@ -67,6 +72,52 @@ export const RPC_METHODS: RpcMethodDef[] = [
       if (!result.cell) throw new Error(`Cell not found (status: ${result.status ?? "unknown"})`);
       const cellOutput = CellOutput.from(result.cell.output!);
       return { type: "Bytes" as const, hex: hexFrom(cellOutput.toBytes()) };
+    },
+  },
+  {
+    id: "get_header",
+    label: "get_header",
+    description: "Fetch a block header by hash.",
+    inputs: [{ id: "hash", label: "block_hash", type: "Hash" }],
+    outputLabel: "Header",
+    outputType: "Bytes",
+    async fetch(url, inputs) {
+      const hash = asHex(inputs.hash);
+      if (!hash) throw new Error("block_hash is not connected");
+      const result = await ckbRpc(url, "get_header", [hash, 1]);
+      if (!result) throw new Error("Header not found");
+      return jsonToValue(result);
+    },
+  },
+  {
+    id: "get_tip_header",
+    label: "get_tip_header",
+    description: "Fetch the latest (tip) block header.",
+    inputs: [],
+    outputLabel: "Header",
+    outputType: "Bytes",
+    async fetch(url) {
+      const result = await ckbRpc(url, "get_tip_header", [1]);
+      if (!result) throw new Error("No tip header");
+      return jsonToValue(result);
+    },
+  },
+  {
+    id: "get_header_by_number",
+    label: "get_header_by_number",
+    description: "Fetch a block header by block number.",
+    inputs: [{ id: "number", label: "block_number", type: "Number" }],
+    outputLabel: "Header",
+    outputType: "Bytes",
+    async fetch(url, inputs) {
+      const numVal = inputs.number;
+      if (!numVal || numVal.type !== "Number") throw new Error("block_number is not connected");
+      const result = await ckbRpc(url, "get_header_by_number", [
+        `0x${numVal.value.toString(16)}`,
+        1,
+      ]);
+      if (!result) throw new Error(`Header not found for block ${numVal.value}`);
+      return jsonToValue(result);
     },
   },
 ];

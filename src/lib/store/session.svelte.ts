@@ -1,10 +1,15 @@
+import type { WorkflowJson } from "$lib/persistence/schema";
+
+export interface BootSource {
+  id: string;
+  label: string;
+  workflow: WorkflowJson;
+}
+
 /**
- * Session-level state. Tracks protocol detection, session-only mode (Phase 2
- * opt-in), and dirty-state tracking for `beforeunload` protection.
- *
- * `dirty` is derived from comparing the current graph serialization to a
- * snapshot captured at boot / Save HTML. The persistence layer updates it
- * via `setDirty`; `markClean` captures a new snapshot.
+ * Session-level state. Tracks protocol detection, session-only mode,
+ * dirty-state tracking for `beforeunload` protection, and the boot
+ * source selection dialog (PLAN §7.6).
  */
 const state = $state({
   isFileProtocol: typeof location !== "undefined" ? location.protocol === "file:" : false,
@@ -12,7 +17,10 @@ const state = $state({
   dirty: false,
   booted: false,
   cleanSnapshot: "",
+  pendingSources: null as BootSource[] | null,
 });
+
+let resolveChoice: ((source: BootSource) => void) | null = null;
 
 export const session = {
   get isFileProtocol(): boolean {
@@ -30,6 +38,9 @@ export const session = {
   get cleanSnapshot(): string {
     return state.cleanSnapshot;
   },
+  get pendingSources(): BootSource[] | null {
+    return state.pendingSources;
+  },
 
   setDirty(value: boolean) {
     state.dirty = value;
@@ -43,6 +54,25 @@ export const session = {
   },
   enterSessionOnly() {
     state.sessionOnly = true;
+  },
+
+  /** Show the boot source selection dialog. */
+  setPendingSources(sources: BootSource[]) {
+    state.pendingSources = sources;
+  },
+
+  /** Called by BootDialog when user picks a source. */
+  chooseSource(source: BootSource) {
+    state.pendingSources = null;
+    resolveChoice?.(source);
+    resolveChoice = null;
+  },
+
+  /** Returns a promise that resolves when the user picks a source. */
+  waitForSourceChoice(): Promise<BootSource> {
+    return new Promise((resolve) => {
+      resolveChoice = resolve;
+    });
   },
 
   /** True iff `beforeunload` should warn the user about unsaved work. */

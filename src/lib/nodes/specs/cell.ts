@@ -7,7 +7,7 @@ import {
   Zero,
 } from "@ckb-ccc/core";
 import { decodeHex } from "$lib/ckb";
-import { asHex } from "../types";
+import { asHex, singleValue } from "../types";
 import type { NodeSpec } from "../spec";
 
 /**
@@ -29,9 +29,10 @@ export const CellSpec: NodeSpec = {
   description: "CKB cell with capacity, lock, optional type, and data.",
   category: "CKB",
   inputs: [
-    { id: "lock", label: "lock", type: "Bytes" },
+    { id: "lock", label: "lock", type: "Bytes", optional: true },
     { id: "type", label: "type", type: "Bytes", optional: true },
     { id: "data", label: "data", type: "Bytes", optional: true },
+    { id: "molecule", label: "decode", type: "Bytes", optional: true },
   ],
   output: { id: "out", label: "CellOutput", type: "Bytes" },
   params: [
@@ -46,6 +47,37 @@ export const CellSpec: NodeSpec = {
   defaultParams: { capacity: "0" },
 
   evaluate: (inputs, params) => {
+    // Decode mode: molecule input connected → decode and display fields
+    const molVal = singleValue(inputs.molecule);
+    if (molVal) {
+      const molHex = asHex(molVal);
+      if (molHex !== undefined) {
+        try {
+          const co = CellOutput.fromBytes(molHex);
+          const capacityCkb = fixedPointToString(co.capacity);
+          return {
+            ok: true,
+            value: { type: "Bytes", hex: molHex },
+            info: [
+              `capacity: ${capacityCkb} CKB`,
+              `lock code_hash: ${co.lock.codeHash.slice(0, 20)}…`,
+              `lock hash_type: ${co.lock.hashType}`,
+              `lock args: ${co.lock.args}`,
+              co.type
+                ? `type code_hash: ${co.type.codeHash.slice(0, 20)}…`
+                : "type: none",
+            ].join("\n"),
+          };
+        } catch (e) {
+          return {
+            ok: false,
+            error: `Invalid CellOutput molecule: ${(e as Error).message}`,
+          };
+        }
+      }
+    }
+
+    // Assemble mode
     const lockVal = inputs.lock;
     if (!lockVal) return { ok: false, error: "lock is not connected" };
 

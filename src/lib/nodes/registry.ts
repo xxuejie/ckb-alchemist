@@ -15,6 +15,9 @@ import { StringToHexSpec, HexToStringSpec, ReverseBytesSpec } from "./specs/conv
 import { NumberInputSpec, ConditionalSpec } from "./specs/utility";
 import { WitnessArgsSpec, CellDepSpec } from "./specs/ckb-structs";
 import { NoteSpec } from "./specs/note";
+import { SinceSpec } from "./specs/since";
+import { KnownScriptSpec } from "./specs/known-script";
+import { DaoCalculatorSpec } from "./specs/dao-calculator";
 
 const SPECS: NodeSpec[] = [
   HexInputSpec,
@@ -34,6 +37,9 @@ const SPECS: NodeSpec[] = [
   HeaderSpec,
   WitnessArgsSpec,
   CellDepSpec,
+  SinceSpec,
+  KnownScriptSpec,
+  DaoCalculatorSpec,
   OutPointSpec,
   TransactionSpec,
   RpcSpec,

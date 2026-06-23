@@ -6,7 +6,7 @@ import {
   hexFrom,
   type Hex,
 } from "@ckb-ccc/core";
-import { multiAsHex } from "../types";
+import { multiAsHex, singleValue } from "../types";
 import type { NodeSpec } from "../spec";
 
 /**
@@ -39,6 +39,7 @@ export const TransactionSpec: NodeSpec = {
       multiple: true,
       optional: true,
     },
+    { id: "molecule", label: "decode", type: "Bytes", optional: true },
   ],
   output: { id: "out", label: "Transaction", type: "Bytes" },
   params: [
@@ -55,6 +56,35 @@ export const TransactionSpec: NodeSpec = {
 
   evaluate: (inputs, params) => {
     try {
+      // Decode mode: molecule input connected → decode and display
+      const molVal = singleValue(inputs.molecule);
+      if (molVal) {
+        const molHex = molVal.type === "Number" ? undefined : molVal.hex;
+        if (molHex !== undefined) {
+          try {
+            const tx = Transaction.fromBytes(molHex);
+            const txHash = tx.hash();
+            return {
+              ok: true,
+              value: { type: "Bytes", hex: molHex },
+              info: [
+                `tx hash: ${txHash}`,
+                `version: ${tx.version}`,
+                `${tx.inputs.length} input(s), ${tx.outputs.length} output(s)`,
+                `${tx.cellDeps.length} cell dep(s), ${tx.headerDeps.length} header dep(s)`,
+                `${tx.witnesses.length} witness(es)`,
+              ].join("\n"),
+            };
+          } catch (e) {
+            return {
+              ok: false,
+              error: `Invalid Transaction molecule: ${(e as Error).message}`,
+            };
+          }
+        }
+      }
+
+      // Assemble mode
       // --- Parse outputs (CellOutput molecules) ---
       const outputHexes = multiAsHex(inputs.outputs);
       const cellOutputs: CellOutput[] = [];

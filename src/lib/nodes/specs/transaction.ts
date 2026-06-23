@@ -23,6 +23,7 @@ export const TransactionSpec: NodeSpec = {
   type: "transaction",
   label: "Transaction",
   description: "Assemble a CKB transaction from outputs and inputs.",
+  category: "Transaction",
   inputs: [
     {
       id: "outputs",

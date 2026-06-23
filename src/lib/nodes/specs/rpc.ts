@@ -13,6 +13,7 @@ export const RpcSpec: NodeSpec = {
   type: "rpc",
   label: "RPC",
   description: "Fetch cells, transactions, etc. from a CKB node.",
+  category: "Network",
   // Declare a superset of handles; the component renders only the relevant ones.
   inputs: [
     { id: "txHash", label: "tx_hash", type: "Hash", optional: true },
@@ -22,9 +23,7 @@ export const RpcSpec: NodeSpec = {
     { id: "script", label: "script", type: "Bytes", optional: true },
   ],
   output: { id: "out", label: "RPC Result", type: "Bytes" },
-  params: [
-    { kind: "select", key: "method", label: "Method", options: [] },
-  ],
+  params: [{ kind: "select", key: "method", label: "Method", options: [] }],
   defaultParams: { method: "get_transaction", __rpcResult: "" },
   evaluate: (_inputs, params) => {
     const cached = params.__rpcResult as string | undefined;

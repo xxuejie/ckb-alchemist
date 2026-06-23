@@ -24,7 +24,7 @@
   <NodeResizer isVisible={selected} minWidth={200} minHeight={80} />
   <header class="al-node__header">
     <span class="al-node__title">{spec.label}</span>
-    <span class="al-node__type">{spec.output.type}</span>
+    <span class="al-node__type">{spec.output?.type ?? ""}</span>
   </header>
 
   {#if spec.inputs.length > 0}
@@ -78,12 +78,14 @@
     {/if}
   </section>
 
-  <Handle
-    id={spec.output.id}
-    type="source"
-    position={Position.Right}
-    class="al-handle al-handle--{spec.output.type}"
-  />
+  {#if spec.output}
+    <Handle
+      id={spec.output.id}
+      type="source"
+      position={Position.Right}
+      class="al-handle al-handle--{spec.output.type}"
+    />
+  {/if}
 </div>
 
 <style>

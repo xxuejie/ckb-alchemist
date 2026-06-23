@@ -52,9 +52,7 @@
   }
 
   function getInputValue(handleId: string): Value | undefined {
-    const edge = graph.edges.find(
-      (e) => e.target === id && e.targetHandle === handleId,
-    );
+    const edge = graph.edges.find((e) => e.target === id && e.targetHandle === handleId);
     if (!edge) return undefined;
     const upstream = graph.evaluation.results.get(edge.source);
     if (upstream?.ok) return upstream.value;
@@ -142,7 +140,8 @@
           <select
             class="al-input al-rpc__param-input"
             value={(params[p.id] as string) ?? p.default}
-            onchange={(e) => onParamChange(p.id, (e.currentTarget as HTMLSelectElement).value)}
+            onchange={(e) =>
+              onParamChange(p.id, (e.currentTarget as HTMLSelectElement).value)}
           >
             {#each p.options as opt (opt)}
               <option value={opt}>{opt}</option>
@@ -208,7 +207,9 @@
     {#if result?.ok}
       <!-- svelte-ignore a11y_no_static_element_interactions -->
       <div class="al-node__hex-wrap nodrag" onpointerdown={(e) => e.stopPropagation()}>
-        <code class="al-node__hex">{result.value.type === "Number" ? result.value.value : result.value.hex}</code>
+        <code class="al-node__hex"
+          >{result.value.type === "Number" ? result.value.value : result.value.hex}</code
+        >
       </div>
       {#if result.info}
         <div class="al-node__info">{result.info}</div>
@@ -220,7 +221,8 @@
 
   {#if params.__rpcResult && params.__rpcResult !== ""}
     <div class="al-rpc__cached">
-      ● cached{#if hasMore} · page available{/if}
+      ● cached{#if hasMore}
+        · page available{/if}
     </div>
   {/if}
 
@@ -245,7 +247,9 @@
   }
   .al-rpc.selected {
     border-color: var(--c-accent);
-    box-shadow: 0 0 0 1px var(--c-accent), 0 2px 12px color-mix(in srgb, var(--c-accent) 30%, transparent);
+    box-shadow:
+      0 0 0 1px var(--c-accent),
+      0 2px 12px color-mix(in srgb, var(--c-accent) 30%, transparent);
   }
   .al-node__header {
     display: flex;
@@ -401,8 +405,16 @@
     border: 2px solid var(--c-border);
     background: var(--c-panel);
   }
-  :global(.al-handle--Bytes) { background: var(--c-bytes); }
-  :global(.al-handle--Script) { background: var(--c-script); }
-  :global(.al-handle--Hash) { background: var(--c-hash); }
-  :global(.al-handle--Number) { background: var(--c-number); }
+  :global(.al-handle--Bytes) {
+    background: var(--c-bytes);
+  }
+  :global(.al-handle--Script) {
+    background: var(--c-script);
+  }
+  :global(.al-handle--Hash) {
+    background: var(--c-hash);
+  }
+  :global(.al-handle--Number) {
+    background: var(--c-number);
+  }
 </style>

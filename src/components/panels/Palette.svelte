@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { listNodeSpecs } from "$lib/nodes";
+  import { specsByCategory } from "$lib/nodes";
   import { graph } from "$lib/store/graph.svelte";
 
-  const specs = listNodeSpecs();
+  const groups = specsByCategory();
 
   function addNode(type: string) {
     graph.addNode(type, {
@@ -13,18 +13,22 @@
 </script>
 
 <div class="al-palette">
-  <h3>Nodes</h3>
-  {#each specs as spec (spec.type)}
-    <button
-      class="al-palette__item"
-      onclick={() => addNode(spec.type)}
-      title={spec.description}
-    >
-      <span class="al-palette__label">{spec.label}</span>
-      <span class="al-palette__out al-palette__out--{spec.output.type}"
-        >{spec.output.type}</span
+  {#each groups as group (group.category)}
+    <h3 class="al-palette__category">{group.category}</h3>
+    {#each group.specs as spec (spec.type)}
+      <button
+        class="al-palette__item"
+        onclick={() => addNode(spec.type)}
+        title={spec.description}
       >
-    </button>
+        <span class="al-palette__label">{spec.label}</span>
+        {#if spec.output}
+          <span class="al-palette__out al-palette__out--{spec.output.type}"
+            >{spec.output.type}</span
+          >
+        {/if}
+      </button>
+    {/each}
   {/each}
 </div>
 
@@ -37,21 +41,28 @@
     min-width: 180px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
     box-shadow: 0 2px 8px var(--c-shadow);
+    max-height: 80vh;
+    overflow-y: auto;
   }
-  .al-palette h3 {
+  .al-palette__category {
     font-size: 10px;
     text-transform: uppercase;
     color: var(--c-text-mute);
-    margin: 0 0 4px;
+    margin: 8px 0 2px;
     letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--c-border);
+    padding-bottom: 2px;
+  }
+  .al-palette__category:first-child {
+    margin-top: 0;
   }
   .al-palette__item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: var(--c-bg);
+    background: var(--c-input-bg);
     border: 1px solid var(--c-border);
     border-radius: 4px;
     padding: 4px 8px;
@@ -70,17 +81,19 @@
     text-transform: uppercase;
     font-weight: 600;
     letter-spacing: 0.05em;
+    flex-shrink: 0;
+    margin-left: 8px;
   }
   .al-palette__out--Bytes {
     color: var(--c-bytes);
   }
   .al-palette__out--Script {
-    color: var(--c-warn);
+    color: var(--c-script);
   }
   .al-palette__out--Hash {
-    color: var(--c-accent);
+    color: var(--c-hash);
   }
   .al-palette__out--Number {
-    color: var(--c-ok);
+    color: var(--c-number);
   }
 </style>

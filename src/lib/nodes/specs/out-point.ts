@@ -10,6 +10,7 @@ export const OutPointSpec: NodeSpec = {
   type: "out-point",
   label: "OutPoint",
   description: "References a cell by tx hash + output index.",
+  category: "Transaction",
   inputs: [],
   output: { id: "out", label: "OutPoint", type: "Bytes" },
   params: [
@@ -30,7 +31,10 @@ export const OutPointSpec: NodeSpec = {
     try {
       const txHashBytes = decodeHex(txHashStr);
       if (txHashBytes.length !== 32) {
-        return { ok: false, error: `Tx hash must be 32 bytes (got ${txHashBytes.length})` };
+        return {
+          ok: false,
+          error: `Tx hash must be 32 bytes (got ${txHashBytes.length})`,
+        };
       }
       const index = Number.parseInt(indexStr, 10);
       if (Number.isNaN(index)) {

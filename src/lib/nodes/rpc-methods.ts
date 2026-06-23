@@ -1,4 +1,12 @@
-import { OutPoint, Transaction, CellOutput, Script, hexFrom, numToHex, bytesFrom } from "@ckb-ccc/core";
+import {
+  OutPoint,
+  Transaction,
+  CellOutput,
+  Script,
+  hexFrom,
+  numToHex,
+  bytesFrom,
+} from "@ckb-ccc/core";
 import type { TransactionLike, CellOutputLike } from "@ckb-ccc/core";
 import { asHex, type EdgeType, type Value } from "./types";
 
@@ -10,7 +18,8 @@ async function ckbRpc(url: string, method: string, params: unknown[]): Promise<u
     body: JSON.stringify({ id: Date.now(), jsonrpc: "2.0", method, params }),
   });
   const json = await res.json();
-  if (json.error) throw new Error(`RPC error (${json.error.code}): ${json.error.message}`);
+  if (json.error)
+    throw new Error(`RPC error (${json.error.code}): ${json.error.message}`);
   return json.result;
 }
 
@@ -99,7 +108,8 @@ export const RPC_METHODS: RpcMethodDef[] = [
         { tx_hash: op.txHash, index: numToHex(op.index) },
         true,
       ])) as { cell?: { output?: CellOutputLike }; status?: string };
-      if (!result.cell) throw new Error(`Cell not found (status: ${result.status ?? "unknown"})`);
+      if (!result.cell)
+        throw new Error(`Cell not found (status: ${result.status ?? "unknown"})`);
       const cellOutput = CellOutput.from(result.cell.output!);
       return { value: { type: "Bytes", hex: hexFrom(cellOutput.toBytes()) } };
     },
@@ -147,7 +157,8 @@ export const RPC_METHODS: RpcMethodDef[] = [
     paginated: false,
     async fetch(url, inputs) {
       const numVal = inputs.number;
-      if (!numVal || numVal.type !== "Number") throw new Error("block_number is not connected");
+      if (!numVal || numVal.type !== "Number")
+        throw new Error("block_number is not connected");
       const result = await ckbRpc(url, "get_header_by_number", [
         `0x${numVal.value.toString(16)}`,
         1,
@@ -250,7 +261,10 @@ export const RPC_METHODS: RpcMethodDef[] = [
 
       const hasMore = result.objects.length >= Number.parseInt(limit, 16);
       return {
-        value: jsonToValue({ transactions: result.objects, count: result.objects.length }),
+        value: jsonToValue({
+          transactions: result.objects,
+          count: result.objects.length,
+        }),
         nextCursor: result.last_cursor,
         hasMore,
       };

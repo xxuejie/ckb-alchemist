@@ -10,6 +10,7 @@ export const CkbHashSpec: NodeSpec = {
   type: "ckb-hash",
   label: "CKB Hash",
   description: "Blake2b-256 with ckb-default-hash personalization.",
+  category: "CKB",
   inputs: [{ id: "content", label: "content", type: "Bytes" }],
   output: { id: "out", label: "Hash", type: "Hash" },
   params: [],

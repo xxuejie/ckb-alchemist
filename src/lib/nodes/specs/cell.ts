@@ -27,6 +27,7 @@ export const CellSpec: NodeSpec = {
   type: "cell",
   label: "Cell",
   description: "CKB cell with capacity, lock, optional type, and data.",
+  category: "CKB",
   inputs: [
     { id: "lock", label: "lock", type: "Bytes" },
     { id: "type", label: "type", type: "Bytes", optional: true },
@@ -86,7 +87,8 @@ export const CellSpec: NodeSpec = {
       const capacity = parseCapacity(capacityStr);
 
       // Calculate occupied size and minimum required capacity.
-      const outputOccupied = 8 + lockScript.occupiedSize + (typeScript?.occupiedSize ?? 0);
+      const outputOccupied =
+        8 + lockScript.occupiedSize + (typeScript?.occupiedSize ?? 0);
       const cellOccupied = outputOccupied + dataLen;
       const minCapacity = fixedPointFrom(cellOccupied); // bytes × 10^8 = shannon
       const isSufficient = capacity >= minCapacity;

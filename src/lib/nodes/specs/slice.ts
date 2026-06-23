@@ -11,6 +11,7 @@ export const SliceSpec: NodeSpec = {
   type: "slice",
   label: "Slice",
   description: "Extract bytes[start..end].",
+  category: "Utility",
   inputs: [{ id: "input", label: "input", type: "Bytes" }],
   output: { id: "out", label: "Bytes", type: "Bytes" },
   params: [

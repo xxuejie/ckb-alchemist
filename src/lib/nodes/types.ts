@@ -51,6 +51,13 @@ export function multiAsHex(v: Value | Value[] | undefined): Hex[] {
     .map((item) => item.hex);
 }
 
+/** Narrows an EvalInputs entry to a single Value (first if array). */
+export function singleValue(v: Value | Value[] | undefined): Value | undefined {
+  if (!v) return undefined;
+  if (Array.isArray(v)) return v[0];
+  return v;
+}
+
 /** Constructs a typed Value from a hex string and a declared edge type. */
 export function valueOf(hex: Hex, type: EdgeType): Value {
   if (type === "Number") {

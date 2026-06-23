@@ -25,15 +25,26 @@
 
   const nodeTypes: NodeTypes = {
     "hex-input": AlchemistNode,
-    "script-assembler": AlchemistNode,
-    "ckb-hash": AlchemistNode,
+    "number-input": AlchemistNode,
+    "string-to-hex": AlchemistNode,
+    "hex-to-string": AlchemistNode,
+    "to-uint64": AlchemistNode,
+    "from-uint64": AlchemistNode,
+    address: AlchemistNode,
+    "reverse-bytes": AlchemistNode,
     concat: AlchemistNode,
     slice: AlchemistNode,
+    conditional: AlchemistNode,
+    "script-assembler": AlchemistNode,
+    "ckb-hash": AlchemistNode,
     cell: AlchemistNode,
+    header: AlchemistNode,
+    "witness-args": AlchemistNode,
+    "cell-dep": AlchemistNode,
     "out-point": AlchemistNode,
     transaction: AlchemistNode,
-    header: AlchemistNode,
     rpc: RpcNode,
+    note: AlchemistNode,
   };
 
   const edgeTypes: EdgeTypes = {

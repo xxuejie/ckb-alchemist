@@ -36,6 +36,7 @@ export const ScriptAssemblerSpec: NodeSpec = {
   type: "script-assembler",
   label: "Script Assembler",
   description: "Assemble code_hash + hash_type + args into a serialized Script.",
+  category: "CKB",
   inputs: [
     { id: "code_hash", label: "code_hash", type: "Hash" },
     { id: "args", label: "args", type: "Bytes" },

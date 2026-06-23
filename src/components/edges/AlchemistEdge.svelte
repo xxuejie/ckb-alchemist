@@ -28,7 +28,7 @@
   const sourceNode = $derived(graph.nodes.find((n) => n.id === source));
   const sourceType: EdgeType = $derived(
     sourceNode && typeof sourceNode.type === "string"
-      ? requireNodeSpec(sourceNode.type).output.type
+      ? (requireNodeSpec(sourceNode.type).output?.type ?? "Bytes")
       : "Bytes",
   );
   const sourceResult = $derived(graph.evaluation.results.get(source ?? ""));

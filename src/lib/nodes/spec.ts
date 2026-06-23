@@ -58,8 +58,11 @@ export interface NodeSpec {
   label: string;
   /** Short description for the palette tooltip. */
   description: string;
+  /** Palette category for grouping. */
+  category: string;
   inputs: InputHandle[];
-  output: OutputHandle;
+  /** Output handle. Omitted for display-only nodes (e.g. Note). */
+  output?: OutputHandle;
   params: ParamField[];
   defaultParams: EvalParams;
   evaluate: (inputs: EvalInputs, params: EvalParams) => EvalResult;

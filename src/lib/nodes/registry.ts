@@ -9,18 +9,35 @@ import { OutPointSpec } from "./specs/out-point";
 import { TransactionSpec } from "./specs/transaction";
 import { RpcSpec } from "./specs/rpc";
 import { HeaderSpec } from "./specs/header";
+import { AddressSpec } from "./specs/address";
+import { ToUint64Spec, FromUint64Spec } from "./specs/uint64";
+import { StringToHexSpec, HexToStringSpec, ReverseBytesSpec } from "./specs/conversion";
+import { NumberInputSpec, ConditionalSpec } from "./specs/utility";
+import { WitnessArgsSpec, CellDepSpec } from "./specs/ckb-structs";
+import { NoteSpec } from "./specs/note";
 
 const SPECS: NodeSpec[] = [
   HexInputSpec,
-  ScriptAssemblerSpec,
-  CkbHashSpec,
+  NumberInputSpec,
+  StringToHexSpec,
+  HexToStringSpec,
+  ToUint64Spec,
+  FromUint64Spec,
+  AddressSpec,
+  ReverseBytesSpec,
   ConcatSpec,
   SliceSpec,
+  ConditionalSpec,
+  ScriptAssemblerSpec,
+  CkbHashSpec,
   CellSpec,
+  HeaderSpec,
+  WitnessArgsSpec,
+  CellDepSpec,
   OutPointSpec,
   TransactionSpec,
-  HeaderSpec,
   RpcSpec,
+  NoteSpec,
 ];
 
 const BY_TYPE: Record<string, NodeSpec> = Object.fromEntries(
@@ -39,4 +56,19 @@ export function requireNodeSpec(type: string): NodeSpec {
 
 export function listNodeSpecs(): NodeSpec[] {
   return SPECS;
+}
+
+/** Returns specs grouped by category, preserving insertion order. */
+export function specsByCategory(): { category: string; specs: NodeSpec[] }[] {
+  const order: string[] = [];
+  const map = new Map<string, NodeSpec[]>();
+  for (const spec of SPECS) {
+    const cat = spec.category;
+    if (!map.has(cat)) {
+      map.set(cat, []);
+      order.push(cat);
+    }
+    map.get(cat)!.push(spec);
+  }
+  return order.map((category) => ({ category, specs: map.get(category)! }));
 }

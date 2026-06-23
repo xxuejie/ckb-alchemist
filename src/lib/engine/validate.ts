@@ -39,7 +39,7 @@ export function makeConnectionValidator(
     const sourceSpec = requireNodeSpec(sourceNode.type);
     const targetSpec = requireNodeSpec(targetNode.type);
 
-    if (sourceHandle !== sourceSpec.output.id) return false;
+    if (!sourceSpec.output || sourceHandle !== sourceSpec.output.id) return false;
     const targetInput = targetSpec.inputs.find((i) => i.id === targetHandle);
     if (!targetInput) return false;
 

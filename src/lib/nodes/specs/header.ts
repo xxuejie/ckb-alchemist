@@ -41,6 +41,7 @@ export const HeaderSpec: NodeSpec = {
   type: "header",
   label: "Header",
   description: "Parses and displays a CKB block header.",
+  category: "CKB",
   inputs: [{ id: "header", label: "header", type: "Bytes" }],
   output: { id: "hash", label: "Block Hash", type: "Hash" },
   params: [],

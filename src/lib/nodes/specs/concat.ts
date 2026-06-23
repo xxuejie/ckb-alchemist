@@ -11,6 +11,7 @@ export const ConcatSpec: NodeSpec = {
   type: "concat",
   label: "Concat",
   description: "Concatenate two byte streams (a ‖ b).",
+  category: "Utility",
   inputs: [
     { id: "a", label: "a", type: "Bytes" },
     { id: "b", label: "b", type: "Bytes" },

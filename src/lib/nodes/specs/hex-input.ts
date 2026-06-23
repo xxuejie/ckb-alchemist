@@ -9,6 +9,7 @@ export const HexInputSpec: NodeSpec = {
   type: "hex-input",
   label: "Hex Input",
   description: "Type raw hex bytes. Output type: Bytes.",
+  category: "Utility",
   inputs: [],
   output: { id: "out", label: "Bytes", type: "Bytes" },
   params: [

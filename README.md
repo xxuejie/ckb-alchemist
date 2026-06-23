@@ -1,29 +1,43 @@
 # CKB Alchemist
 
-A visual, node-based builder for CKB transactions. The graph _is_ the source of truth: nodes produce typed outputs, edges carry them to consumers, and the assembled canvas compiles down to a CKB transaction.
+A visual, node-based builder for CKB transactions. The graph is the source of truth: nodes produce typed outputs, edges carry them to consumers, and the canvas compiles into CKB data structures.
 
-Built with **Svelte 5 + Svelte Flow + Vite + TypeScript + Tailwind**. Production builds emit a single self-contained `index.html` (modeled on [Tiddlywiki](https://tiddlywiki.com/)) that works offline from `file://` or any static host.
+Production builds emit a **single self-contained `index.html`** that works offline from `file://` or any static host.
 
 ## Quick start
 
 ```bash
 pnpm install
-pnpm dev          # local dev server (http://localhost:5173)
-pnpm dev:host     # dev server accessible on the LAN
-pnpm build        # single-file production build → dist/index.html
-pnpm test         # run vitest
-pnpm check        # lint + typecheck + test + build (via check.sh)
+pnpm dev          # dev server (localhost:5173)
+pnpm dev:host     # dev server on LAN (0.0.0.0)
+pnpm build        # single-file build → dist/index.html
+pnpm test         # 74 tests
+./check.sh        # format + lint + typecheck + test + build
 ```
 
-## Architecture
+## Nodes
 
-See [`PLAN.md`](./PLAN.md) for the full design document.
+| Category | Widgets |
+|---|---|
+| **Conversion** | Address, String→Hex, Hex→String, To Uint64 LE, From Uint64 LE, Reverse Bytes |
+| **Utility** | Hex Input, Number, Concat, Slice, Conditional |
+| **CKB** | Script Assembler, CKB Hash, Cell, Header, WitnessArgs, CellDep, Since, Known Script, DAO Calculator, Signer |
+| **Transaction** | Transaction, OutPoint |
+| **Network** | RPC (get_transaction, get_live_cell, get_header, get_tip_header, get_header_by_number, get_cells, get_transactions) |
+| **Other** | Note |
 
-- **`src/lib/ckb/`** — Pure TS domain layer (hex, blake2b, Script molecule serialization) wrapping `@ckb-ccc/core`.
-- **`src/lib/nodes/`** — Declarative node-spec registry. Each spec declares typed inputs, a single typed output, param schema, and a pure `evaluate` function.
-- **`src/lib/engine/`** — Topological evaluation over the Svelte Flow graph with cycle detection and type-checking connection validation.
-- **`src/lib/persistence/`** — Tiddlywiki-style persistence: in-DOM `#alchemist-state` mirror, protocol-aware `localStorage`, Save HTML, gzip+base64url text codec.
-- **`src/components/`** — Svelte Flow canvas, generic node component, custom edges, panels (top bar, palette, inspector).
+Script, Cell, and Transaction nodes accept a `decode` input to parse molecule-serialized bytes.
+
+## Persistence
+
+- **Save HTML** — downloads a self-contained file that rehydrates the same graph
+- **Share URL** — `?data=<gzip+base64url>` for small workflows, `?gist=<id>` for large ones
+- **localStorage** — auto-saved on web URLs (not used on `file://`)
+- **Boot dialog** — when multiple sources exist, choose which to load
+
+## Tech
+
+Svelte 5 · Svelte Flow · Vite · TypeScript · Tailwind · @ckb-ccc/core · @noble/curves · dagre
 
 ## License
 

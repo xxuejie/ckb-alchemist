@@ -28,12 +28,24 @@ export type Value =
 
 /**
  * Extracts the hex payload from any byte-family value.
+ * For multi-input handles, takes the first value.
  * Returns `undefined` for Number values or absent inputs.
  */
-export function asHex(v: Value | undefined): Hex | undefined {
+export function asHex(v: Value | Value[] | undefined): Hex | undefined {
+  if (!v) return undefined;
+  if (Array.isArray(v)) v = v[0];
   if (!v) return undefined;
   if (v.type === "Number") return undefined;
   return v.hex;
+}
+
+/** Extracts all hex payloads from a multi-input handle. */
+export function multiAsHex(v: Value | Value[] | undefined): Hex[] {
+  if (!v) return [];
+  const arr = Array.isArray(v) ? v : [v];
+  return arr
+    .filter((item): item is Extract<Value, { hex: string }> => item.type !== "Number")
+    .map((item) => item.hex);
 }
 
 /** Constructs a typed Value from a hex string and a declared edge type. */

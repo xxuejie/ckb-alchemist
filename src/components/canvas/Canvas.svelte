@@ -29,6 +29,8 @@
     concat: AlchemistNode,
     slice: AlchemistNode,
     cell: AlchemistNode,
+    "out-point": AlchemistNode,
+    transaction: AlchemistNode,
   };
 
   const edgeTypes: EdgeTypes = {

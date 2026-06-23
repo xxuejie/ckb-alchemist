@@ -5,6 +5,8 @@ import { CkbHashSpec } from "./specs/ckb-hash";
 import { ConcatSpec } from "./specs/concat";
 import { SliceSpec } from "./specs/slice";
 import { CellSpec } from "./specs/cell";
+import { OutPointSpec } from "./specs/out-point";
+import { TransactionSpec } from "./specs/transaction";
 
 const SPECS: NodeSpec[] = [
   HexInputSpec,
@@ -13,6 +15,8 @@ const SPECS: NodeSpec[] = [
   ConcatSpec,
   SliceSpec,
   CellSpec,
+  OutPointSpec,
+  TransactionSpec,
 ];
 
 const BY_TYPE: Record<string, NodeSpec> = Object.fromEntries(

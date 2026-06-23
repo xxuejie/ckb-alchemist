@@ -3,7 +3,7 @@ import { evaluateGraph } from "$lib/engine";
 import type { XYPosition } from "@xyflow/svelte";
 import { createSeedGraph } from "$lib/nodes";
 import type { EvalParams } from "$lib/nodes";
-import { requireNodeSpec } from "$lib/nodes";
+import { requireNodeSpec, getNodeSpec } from "$lib/nodes";
 
 let idCounter = 0;
 
@@ -80,11 +80,32 @@ class GraphStore {
   }
 
   addEdge(edge: AlchemistEdge) {
-    const idx = this.edges.findIndex(
-      (e) => e.target === edge.target && e.targetHandle === edge.targetHandle,
-    );
-    if (idx >= 0) this.edges.splice(idx, 1);
-    this.edges.push(edge);
+    // Check if the target handle is multi-input.
+    const targetNode = this.nodes.find((n) => n.id === edge.target);
+    const spec =
+      targetNode && typeof targetNode.type === "string"
+        ? getNodeSpec(targetNode.type)
+        : undefined;
+    const inputDef = spec?.inputs.find((i) => i.id === edge.targetHandle);
+
+    if (inputDef?.multiple) {
+      // Allow multiple edges — skip exact duplicates only.
+      const exists = this.edges.some(
+        (e) =>
+          e.source === edge.source &&
+          e.sourceHandle === edge.sourceHandle &&
+          e.target === edge.target &&
+          e.targetHandle === edge.targetHandle,
+      );
+      if (!exists) this.edges.push(edge);
+    } else {
+      // Single-input: replace existing edge into the same target handle.
+      const idx = this.edges.findIndex(
+        (e) => e.target === edge.target && e.targetHandle === edge.targetHandle,
+      );
+      if (idx >= 0) this.edges.splice(idx, 1);
+      this.edges.push(edge);
+    }
   }
 
   removeEdge(id: string) {

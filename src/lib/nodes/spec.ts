@@ -5,8 +5,9 @@ export type EvalResult =
   | { ok: true; value: Value; info?: string }
   | { ok: false; error: string };
 
-/** Inputs passed to `evaluate`, keyed by input handle id. */
-export type EvalInputs = Record<string, Value | undefined>;
+/** Inputs passed to `evaluate`, keyed by input handle id. Multi-input handles
+ * carry `Value[]`; single-input handles carry `Value | undefined`. */
+export type EvalInputs = Record<string, Value | Value[] | undefined>;
 
 /** Params passed to `evaluate`, keyed by param field key. */
 export type EvalParams = Record<string, unknown>;
@@ -35,6 +36,9 @@ export interface InputHandle {
   label: string;
   type: EdgeType;
   optional?: boolean;
+  /** When true, this handle accepts multiple edges. The evaluate function
+   * receives all incoming values as `Value[]` instead of a single `Value`. */
+  multiple?: boolean;
 }
 
 export interface OutputHandle {

@@ -1,5 +1,6 @@
 import type { AlchemistEdge, AlchemistNode } from "./graph";
 import type { EvalInputs, EvalResult } from "../nodes/spec";
+import type { Value } from "../nodes/types";
 import { requireNodeSpec } from "../nodes/registry";
 
 export interface GraphEvaluation {
@@ -46,7 +47,14 @@ export function evaluateGraph(
     for (const e of incoming.get(id) ?? []) {
       if (!e.targetHandle) continue;
       const upstream = results.get(e.source);
-      if (upstream && upstream.ok) {
+      if (!upstream || !upstream.ok) continue;
+
+      const inputDef = spec.inputs.find((i) => i.id === e.targetHandle);
+      if (inputDef?.multiple) {
+        const arr = (inputs[e.targetHandle] as Value[] | undefined) ?? [];
+        arr.push(upstream.value);
+        inputs[e.targetHandle] = arr;
+      } else {
         inputs[e.targetHandle] = upstream.value;
       }
     }

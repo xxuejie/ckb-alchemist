@@ -1,6 +1,7 @@
 import {
   CellOutput,
   CellInput,
+  CellDep,
   OutPoint,
   Transaction,
   hexFrom,
@@ -35,6 +36,13 @@ export const TransactionSpec: NodeSpec = {
     {
       id: "inputs",
       label: "inputs",
+      type: "Bytes",
+      multiple: true,
+      optional: true,
+    },
+    {
+      id: "cellDeps",
+      label: "cell_deps",
       type: "Bytes",
       multiple: true,
       optional: true,
@@ -108,6 +116,17 @@ export const TransactionSpec: NodeSpec = {
         }
       }
 
+      // --- Parse cellDeps (CellDep molecules) ---
+      const cellDepHexes = multiAsHex(inputs.cellDeps);
+      const cellDepsParsed: CellDep[] = [];
+      for (const hex of cellDepHexes) {
+        try {
+          cellDepsParsed.push(CellDep.fromBytes(hex));
+        } catch {
+          return { ok: false, error: "Invalid CellDep molecule in cell_deps" };
+        }
+      }
+
       // --- Parse headerDeps ---
       const headerDepsStr = (params.headerDeps as string | undefined) ?? "";
       const headerDeps: Hex[] = headerDepsStr
@@ -126,7 +145,10 @@ export const TransactionSpec: NodeSpec = {
 
       const tx = Transaction.from({
         version: 0,
-        cellDeps: [],
+        cellDeps: cellDepsParsed.map((cd) => ({
+          outPoint: cd.outPoint,
+          depType: cd.depType,
+        })),
         headerDeps,
         inputs: cellInputs.map((ci) => ({
           previousOutput: ci.previousOutput,
@@ -143,7 +165,7 @@ export const TransactionSpec: NodeSpec = {
       const fullHex = hexFrom(tx.toBytes());
       const txHash = tx.hash();
 
-      const info = `tx hash: ${txHash}\n${cellOutputs.length} output(s), ${cellInputs.length} input(s)`;
+      const info = `tx hash: ${txHash}\n${cellOutputs.length} output(s), ${cellInputs.length} input(s), ${cellDepsParsed.length} cell dep(s)`;
 
       return { ok: true, value: { type: "Bytes", hex: fullHex }, info };
     } catch (e) {

@@ -21,6 +21,7 @@
     "@sveltejs/vite-plugin-svelte": "^5.0.3",
     "@testing-library/jest-dom": "^6.6.3",
     "@tsconfig/svelte": "^5.0.4",
+    "@types/dagre": "^0.7.54",
     "@types/pako": "^2.0.3",
     "@typescript-eslint/eslint-plugin": "^8.19.1",
     "@typescript-eslint/parser": "^8.19.1",
@@ -45,7 +46,9 @@
   "dependencies": {
     "@ckb-ccc/ccc": "^1.1.25",
     "@ckb-ccc/core": "^1.12.5",
+    "@noble/curves": "^1.9.7",
     "@xyflow/svelte": "^1.6.0",
+    "dagre": "^0.8.5",
     "pako": "^2.1.0"
   }
 }

@@ -18,6 +18,7 @@ import { NoteSpec } from "./specs/note";
 import { SinceSpec } from "./specs/since";
 import { KnownScriptSpec } from "./specs/known-script";
 import { DaoCalculatorSpec } from "./specs/dao-calculator";
+import { SignerSpec } from "./specs/signer";
 
 const SPECS: NodeSpec[] = [
   HexInputSpec,
@@ -40,6 +41,7 @@ const SPECS: NodeSpec[] = [
   SinceSpec,
   KnownScriptSpec,
   DaoCalculatorSpec,
+  SignerSpec,
   OutPointSpec,
   TransactionSpec,
   RpcSpec,

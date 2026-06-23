@@ -44,6 +44,7 @@
     since: AlchemistNode,
     "known-script": AlchemistNode,
     "dao-calculator": AlchemistNode,
+    signer: AlchemistNode,
     "out-point": AlchemistNode,
     transaction: AlchemistNode,
     rpc: RpcNode,
@@ -79,6 +80,11 @@
     graph.select(null);
   }
 
+  // Snapshot for undo before drag starts
+  function onNodeDragStart() {
+    graph.pushUndo();
+  }
+
   // With bind:nodes/edges, Svelte Flow has already updated the arrays.
   // We only need to reset the selected node if it was deleted.
   function onDelete({ nodes: deletedNodes }: { nodes: { id: string }[] }) {
@@ -88,7 +94,31 @@
   // Enables edge reconnect anchors. Svelte Flow + bind:edges handles the
   // actual edge replacement; this handler exists to opt in to the feature.
   function onReconnect() {}
+
+  function onKeyDown(e: KeyboardEvent) {
+    const t = e.target as HTMLElement;
+    if (
+      t &&
+      (t.tagName === "INPUT" ||
+        t.tagName === "TEXTAREA" ||
+        t.tagName === "SELECT" ||
+        t.isContentEditable)
+    ) {
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && (e.key === "z" || e.key === "Z")) {
+      e.preventDefault();
+      if (e.shiftKey) graph.redo();
+      else graph.undo();
+    }
+    if ((e.ctrlKey || e.metaKey) && (e.key === "y" || e.key === "Y")) {
+      e.preventDefault();
+      graph.redo();
+    }
+  }
 </script>
+
+<svelte:window onkeydown={onKeyDown} />
 
 <SvelteFlow
   bind:nodes={graph.nodes}
@@ -100,6 +130,7 @@
   {isValidConnection}
   onnodeclick={onNodeClick}
   onpaneclick={onPaneClick}
+  onnodedragstart={onNodeDragStart}
   ondelete={onDelete}
   defaultEdgeOptions={{ type: "alchemist" }}
   connectionLineComponent={AlchemistConnectionLine}

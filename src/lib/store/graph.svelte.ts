@@ -4,6 +4,7 @@ import type { XYPosition } from "@xyflow/svelte";
 import { createSeedGraph } from "$lib/nodes";
 import type { EvalParams } from "$lib/nodes";
 import { requireNodeSpec, getNodeSpec } from "$lib/nodes";
+import dagre from "dagre";
 
 let idCounter = 0;
 
@@ -22,6 +23,73 @@ class GraphStore {
   nodes = $state<AlchemistNode[]>([]);
   edges = $state<AlchemistEdge[]>([]);
   selectedNodeId = $state<string | null>(null);
+  canUndo = $state(false);
+  canRedo = $state(false);
+
+  private undoStack: { nodes: AlchemistNode[]; edges: AlchemistEdge[] }[] = [];
+  private redoStack: { nodes: AlchemistNode[]; edges: AlchemistEdge[] }[] = [];
+  private suppressUndo = false;
+
+  private snapshot() {
+    return {
+      nodes: structuredClone(this.nodes.map((n) => ({ ...n, data: { ...n.data } }))),
+      edges: structuredClone(this.edges.map((e) => ({ ...e }))),
+    };
+  }
+
+  pushUndo() {
+    if (this.suppressUndo) return;
+    this.undoStack.push(this.snapshot());
+    if (this.undoStack.length > 50) this.undoStack.shift();
+    this.redoStack = [];
+    this.canUndo = this.undoStack.length > 0;
+    this.canRedo = false;
+  }
+
+  undo() {
+    if (this.undoStack.length === 0) return;
+    this.redoStack.push(this.snapshot());
+    const prev = this.undoStack.pop()!;
+    this.suppressUndo = true;
+    this.loadGraph(prev.nodes, prev.edges);
+    this.suppressUndo = false;
+    this.canUndo = this.undoStack.length > 0;
+    this.canRedo = this.redoStack.length > 0;
+  }
+
+  redo() {
+    if (this.redoStack.length === 0) return;
+    this.undoStack.push(this.snapshot());
+    const next = this.redoStack.pop()!;
+    this.suppressUndo = true;
+    this.loadGraph(next.nodes, next.edges);
+    this.suppressUndo = false;
+    this.canUndo = this.undoStack.length > 0;
+    this.canRedo = this.redoStack.length > 0;
+  }
+
+  autoLayout() {
+    this.pushUndo();
+    const g = new dagre.graphlib.Graph();
+    g.setGraph({ rankdir: "LR", nodesep: 50, ranksep: 100 });
+    g.setDefaultEdgeLabel(() => ({}));
+    for (const node of this.nodes) {
+      g.setNode(node.id, { width: node.width ?? 280, height: 140 });
+    }
+    for (const edge of this.edges) {
+      g.setEdge(edge.source, edge.target);
+    }
+    dagre.layout(g);
+    for (const node of this.nodes) {
+      const pos = g.node(node.id);
+      if (pos) {
+        node.position = {
+          x: pos.x - (node.width ?? 280) / 2,
+          y: pos.y - 70,
+        };
+      }
+    }
+  }
 
   selectedNode(): AlchemistNode | undefined {
     return this.selectedNodeId
@@ -34,6 +102,7 @@ class GraphStore {
   }
 
   addNode(type: string, position: XYPosition): AlchemistNode {
+    this.pushUndo();
     requireNodeSpec(type);
     const params = structuredClone(requireNodeSpec(type).defaultParams);
     const node: AlchemistNode = {
@@ -50,6 +119,7 @@ class GraphStore {
   }
 
   removeNode(id: string) {
+    this.pushUndo();
     const idx = this.nodes.findIndex((n) => n.id === id);
     if (idx >= 0) this.nodes.splice(idx, 1);
     for (let i = this.edges.length - 1; i >= 0; i--) {
@@ -80,6 +150,7 @@ class GraphStore {
   }
 
   addEdge(edge: AlchemistEdge) {
+    this.pushUndo();
     // Check if the target handle is multi-input.
     const targetNode = this.nodes.find((n) => n.id === edge.target);
     const spec =
@@ -109,17 +180,20 @@ class GraphStore {
   }
 
   removeEdge(id: string) {
+    this.pushUndo();
     const idx = this.edges.findIndex((e) => e.id === id);
     if (idx >= 0) this.edges.splice(idx, 1);
   }
 
   loadGraph(nodes: AlchemistNode[], edges: AlchemistEdge[]) {
+    if (!this.suppressUndo) this.pushUndo();
     this.nodes.splice(0, this.nodes.length, ...nodes);
     this.edges.splice(0, this.edges.length, ...edges);
     this.selectedNodeId = null;
   }
 
   resetToSeed() {
+    this.pushUndo();
     const seed = createSeedGraph();
     this.nodes.splice(0, this.nodes.length, ...seed.nodes);
     this.edges.splice(0, this.edges.length, ...seed.edges);

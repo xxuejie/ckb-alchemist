@@ -52,6 +52,21 @@
   </div>
 
   <div class="al-topbar__actions">
+    <button
+      class="al-btn"
+      onclick={() => graph.undo()}
+      disabled={!graph.canUndo}
+      title="Undo (Ctrl+Z)">↶</button
+    >
+    <button
+      class="al-btn"
+      onclick={() => graph.redo()}
+      disabled={!graph.canRedo}
+      title="Redo (Ctrl+Shift+Z)">↷</button
+    >
+    <button class="al-btn" onclick={() => graph.autoLayout()} title="Auto-layout"
+      >⇲</button
+    >
     <button class="al-btn" onclick={() => theme.toggle()} title="Toggle dark/light theme">
       {theme.current === "dark" ? "☀" : "🌙"}
     </button>
@@ -165,5 +180,9 @@
   }
   .al-btn:hover {
     background: var(--c-border-strong);
+  }
+  .al-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
   }
 </style>

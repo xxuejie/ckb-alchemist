@@ -30,9 +30,9 @@
   }
 </script>
 
-<div class="al-palette">
-  <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div class="al-palette__search nodrag" onpointerdown={(e) => e.stopPropagation()}>
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="al-palette nodrag" onpointerdown={(e) => e.stopPropagation()}>
+  <div class="al-palette__search">
     <input
       class="al-palette__search-input"
       type="text"
